@@ -1,0 +1,22 @@
+//////////////////////////////////////////////////////////////////
+// Options.txt - These are the base options that you selected
+//////////////////////////////////////////////////////////////////
+
+You have selected to use Maya 2015
+
+Vendor Name is: 
+
+Verbose Comments ON
+
+Plug-in type number (0-Empty, 1-MEL, 2-MEL w/Undo, 3-DG Node)
+1
+
+Maya Type Name (Plug-in Name)
+CIS660AuthoringTool
+
+Included Libraries:
+Foundation
+OpenMaya
+OpenMayaUI
+Image
+OpenGL32
