@@ -3,20 +3,23 @@ global int $valWidth = 128;
 
 global float $valSize= 2;
 
+global string $heightMapPath = 0;
+global string $heightMap = 0;
 
-//global proc fileDialog()
-//{
-//	global string $grammarPath;
-//	global string $grammar;
-//
-//
-//	$grammarPath = `fileDialog -dm "*.txt"`;
-//	$file = `fopen $grammarPath "r"`;
-//    $grammar = `fread $file $grammar`;
-//	print $grammar;
-//    scrollField -edit -text $grammar grammarScroll;
-//    fclose $file;
-//}
+
+global proc fileDialog()
+{
+	global string $heightMapPath;
+	global string $heightMap;
+
+
+	$heightMapPath = `fileDialog -dm "*.png"`;
+	$file = `fopen $heightMapPath "r"`;
+    $heightMap = `fread $file $heightMap`;
+    image -i heightMapPath;
+    scrollField -edit -text $heightMapPath heightMapScroll;
+    fclose $file;
+}
 
 //global proc createNode() {
 //	createNode transform -n CIS660AuthoringTool1;
@@ -42,8 +45,9 @@ global proc windowFunction()
 {
     window;
 		columnLayout;
-		//scrollField -wordWrap on -text "Grammar" grammarScroll;
-		//button -command fileDialog -label "Browse for grammar file";
+		//image -i heightMapPath;
+		scrollField -wordWrap on -text "HeightMap" heightMapScroll;
+		button -command fileDialog -label "Browse for heightmap file";
 		intSliderGrp -minValue 1 -maxValue 256 -step 1 -label "Height" -field true height;
 		intSliderGrp -minValue 1 -maxValue 256 -step 1 -label "Width" -field true width;
 		floatSliderGrp -minValue 1 -maxValue 256 -label "Size" -field true size;
