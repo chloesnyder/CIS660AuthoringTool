@@ -36,10 +36,10 @@ MStatus initializePlugin(MObject obj)
 
     plugin.setName("CIS660AuthoringTool");
 
-    status = plugin.registerNode("CIS660AuthoringToolNode", CIS660AuthoringToolNode::id, CIS660AuthoringToolNode::creator, CIS660AuthoringToolNode::initialize);
-    if (!status) {
-        CHECK_MSTATUS_AND_RETURN_IT(status);
-        }
+    //status = plugin.registerNode("CIS660AuthoringToolNode", CIS660AuthoringToolNode::id, CIS660AuthoringToolNode::creator, CIS660AuthoringToolNode::initialize);
+    //if (!status) {
+    //    CHECK_MSTATUS_AND_RETURN_IT(status);
+    //    }
 
     char buffer[2048];
     //MString s = plugin.loadPath();
@@ -62,10 +62,10 @@ MStatus uninitializePlugin(MObject obj)
         return status;
         }
     
-    status = plugin.deregisterNode(CIS660AuthoringToolNode::id);
-    if (!status) {
-        CHECK_MSTATUS_AND_RETURN_IT(status);
-    }
+    //status = plugin.deregisterNode(CIS660AuthoringToolNode::id);
+    //if (!status) {
+    //    CHECK_MSTATUS_AND_RETURN_IT(status);
+    //}
     
     return status;
 }

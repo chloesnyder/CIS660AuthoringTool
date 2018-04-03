@@ -7,9 +7,24 @@
 #include <maya/MSyntax.h>
 #include <maya/MArgDatabase.h>
 #include <maya/MGlobal.h>
-#include <maya/MPxNode.h>
 #include <list>
 #include <sstream>
+
+#include <maya/MIOStream.h>
+#include <math.h>
+
+#include <maya/MPxCommand.h>
+#include <maya/MString.h>
+#include <maya/MArgList.h>
+#include <maya/MGlobal.h>
+#include <maya/MPoint.h>
+#include <maya/MIntArray.h>
+#include <maya/MDoubleArray.h>
+#include <maya/MFloatPoint.h>
+#include <maya/MFloatPointArray.h>
+#include <maya/MDagPath.h>
+#include <maya/MFnMesh.h>
+
 
 #define WIDTH "-w"
 #define WIDTH_LONG "-width"
@@ -18,6 +33,19 @@
 #define SIZE "-s"
 #define SIZE_LONG "-size"
 
+#define McheckErr(stat,msg)             \
+        if ( MS::kSuccess != stat ) {   \
+                cerr << msg;            \
+                return MS::kFailure;    \
+        }
+
+#define checkErr(stat,msg)                                      \
+    if ( MS::kSuccess != stat ) {                       \
+        displayError(msg);                                      \
+                return stat;                                            \
+        }
+
+
 class CIS660AuthoringToolCmd : public MPxCommand
 {
 public:
@@ -25,7 +53,24 @@ public:
     virtual ~CIS660AuthoringToolCmd();
     static void* creator() { return new CIS660AuthoringToolCmd(); }
     MStatus doIt(const MArgList& args);
-    MStatus createPlane(int x, int y);
+    void createPlane(int width, int height, double s);
+
+    // Poly primitive
+    int num_verts;                  // Number of vertices of polygon
+    int num_faces;                  // Number of faces on polygon
+    int num_edges;                  // Number of edges on polygon
+    int edges_per_face;             // Number of edges (or verticies) per face
+    int num_face_connects;  // Number of elements in face connect array
+    int *p_gons;                    // Pointer to static array of face connects
+    MFloatPointArray iarr;
+    MFloatPointArray pa;
+    MIntArray faceCounts;
+    MIntArray faceConnects;
+  
+    MObject newTransform;
+    MDGModifier dgModifier;
+
+    void FILL(double x, double y, double z);
 
     static MSyntax newSyntax() {
         MSyntax syntax;

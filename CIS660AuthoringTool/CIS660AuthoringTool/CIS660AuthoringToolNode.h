@@ -58,8 +58,6 @@ class CIS660AuthoringToolNode : public MPxNode
         MIntArray faceCounts;
         MIntArray faceConnects;
 
-        MObject newTransform;
-        MDGModifier dgModifier;
 
         void FILL(double x, double y, double z);
 

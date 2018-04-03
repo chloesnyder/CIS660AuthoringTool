@@ -18,16 +18,25 @@ global float $valSize= 2;
 //    fclose $file;
 //}
 
-global proc createNode() {
-	createNode transform -n CIS660AuthoringTool1;
-	createNode mesh -n CIS660AuthoringToolShape1 -p CIS660AuthoringTool1;
-	sets -add initialShadingGroup CIS660AuthoringToolShape1;
-	createNode CIS660AuthoringToolNode -n CIS660AuthoringToolNode1;
-	connectAttr time1.outTime CIS660AuthoringToolNode1.time;
-	connectAttr CIS660AuthoringToolNode1.outputMesh CIS660AuthoringToolShape1.inMesh;
+//global proc createNode() {
+//	createNode transform -n CIS660AuthoringTool1;
+//	createNode mesh -n CIS660AuthoringToolShape1 -p CIS660AuthoringTool1;
+//	sets -add initialShadingGroup CIS660AuthoringToolShape1;
+//	createNode CIS660AuthoringToolNode -n CIS660AuthoringToolNode1;
+//	connectAttr time1.outTime CIS660AuthoringToolNode1.time;
+//	connectAttr CIS660AuthoringToolNode1.outputMesh CIS660AuthoringToolShape1.inMesh;
+//
+//}
 
+
+global proc executeCommand()
+{
+	//global string $grammar;
+	$valHeight = `intSliderGrp -query -value width`;
+	$valWidth = `intSliderGrp -query -value height`;
+	$valSize = `floatSliderGrp -query -value size`;
+	CIS660AuthoringToolCmd -w $valWidth -h $valHeight -s $valSize;
 }
-
 
 global proc windowFunction()
 {
@@ -35,13 +44,14 @@ global proc windowFunction()
 		columnLayout;
 		//scrollField -wordWrap on -text "Grammar" grammarScroll;
 		//button -command fileDialog -label "Browse for grammar file";
-		intSliderGrp -minValue 1 -step 1 -label "Height" -field true height;
-		intSliderGrp -minValue 1 -step 1 -label "Width" -field true width;
-		floatSliderGrp -minValue 1 -label "Size" -field true size;
+		intSliderGrp -minValue 1 -maxValue 256 -step 1 -label "Height" -field true height;
+		intSliderGrp -minValue 1 -maxValue 256 -step 1 -label "Width" -field true width;
+		floatSliderGrp -minValue 1 -maxValue 256 -label "Size" -field true size;
+		button -command "executeCommand();" -label "Create Plane";
 	showWindow;
 }
 
 
 menu -parent MayaWindow -label "CIS660AuthoringTool Command" -tearOff true menu1;
 	menuItem -label "CIS660AuthoringTool Command" -command "windowFunction();";
-	menuItem -label "Create node" -command "createNode();";
+	//menuItem -label "Create node" -command "createNode();";
