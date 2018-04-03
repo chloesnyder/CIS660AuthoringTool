@@ -2,15 +2,15 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{81d341a4-c0f4-40b3-aad6-65d71dde3d2e}</UniqueIdentifier>
+      <UniqueIdentifier>{e31c2a01-6401-4f8d-b10d-8879aad2bbf1}</UniqueIdentifier>
       <Extensions>cpp</Extensions>
     </Filter>
     <Filter Include="Header Files">
-      <UniqueIdentifier>{ccc2431d-7b80-4c6a-9269-2ecd8e32fc3e}</UniqueIdentifier>
+      <UniqueIdentifier>{6b514d4c-b737-463f-aa18-2bb993e4a803}</UniqueIdentifier>
       <Extensions>h</Extensions>
     </Filter>
     <Filter Include="Miscellaneous Files">
-      <UniqueIdentifier>{8888e57d-c893-46a6-ba33-53059ab00189}</UniqueIdentifier>
+      <UniqueIdentifier>{6e5ffcf2-5370-46a2-943d-e69f7cc4d649}</UniqueIdentifier>
       <Extensions>txt</Extensions>
     </Filter>
   </ItemGroup>
@@ -26,5 +26,8 @@
     <ClCompile Include="CIS660AuthoringToolCmd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CIS660AuthoringToolCreateUI.mel" />
   </ItemGroup>
 </Project>

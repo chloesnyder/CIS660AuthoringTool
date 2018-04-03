@@ -17,6 +17,3 @@ CIS660AuthoringTool
 Included Libraries:
 Foundation
 OpenMaya
-OpenMayaUI
-Image
-OpenGL32

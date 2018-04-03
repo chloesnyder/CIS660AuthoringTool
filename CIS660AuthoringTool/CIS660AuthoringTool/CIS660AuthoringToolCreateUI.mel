@@ -1,0 +1,9 @@
+// create window
+			window;
+			columnLayout;
+			
+				// create three symbol buttons with related mel command
+				symbolButton -image "circle.xpm" -command "circle";
+				symbolButton -image "sphere.xpm" -command "sphere";
+				symbolButton -image "cube.xpm" -command "polyCube";
+			showWindow;
