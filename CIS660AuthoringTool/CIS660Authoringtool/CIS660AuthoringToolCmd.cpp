@@ -12,7 +12,7 @@ CIS660AuthoringToolCmd::~CIS660AuthoringToolCmd()
 
  }
 
-MStatus createPlane(int x, int y)
+MStatus CIS660AuthoringToolCmd::createPlane(int x, int y)
 {
     std::string createPlane;
     std::stringstream stringStream;
@@ -34,6 +34,7 @@ MStatus CIS660AuthoringToolCmd::doIt(const MArgList& args)
 
     int sx = 128;
     int sy = 128;
+    double size = 2.0;
 
     MArgDatabase parser(syntax(), args, &status);
     if (status != MS::kSuccess)
@@ -51,6 +52,11 @@ MStatus CIS660AuthoringToolCmd::doIt(const MArgList& args)
         parser.getFlagArgument(HEIGHT, 0, sy);
     }
 
+    if (parser.isFlagSet(SIZE))
+    {
+        parser.getFlagArgument(SIZE, 0, size);
+    }
+
     status = createPlane(sx, sy);
     MGlobal::displayInfo("CIS660AuthoringToolCmd\n");
     setResult("CIS660AuthoringToolCmd was executed\n");
@@ -58,7 +64,10 @@ MStatus CIS660AuthoringToolCmd::doIt(const MArgList& args)
     return status;
 }
 
-
+MStatus MPxNode::dependsOn(const MPlug &, const MPlug &, bool &) const
+{
+    return MS::kUnknownParameter;
+}
 
 
 

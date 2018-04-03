@@ -43,8 +43,29 @@ class CIS660AuthoringToolNode : public MPxNode
         static MObject time;
         static MObject width;
         static MObject height;
+        static MObject size;
         static MObject outputMesh;
 
+        // Poly primitive
+        int num_verts;                  // Number of vertices of polygon
+        int num_faces;                  // Number of faces on polygon
+        int num_edges;                  // Number of edges on polygon
+        int edges_per_face;             // Number of edges (or verticies) per face
+        int num_face_connects;  // Number of elements in face connect array
+        int *p_gons;                    // Pointer to static array of face connects
+        MFloatPointArray iarr;
+        MFloatPointArray pa;
+        MIntArray faceCounts;
+        MIntArray faceConnects;
+
+        MObject newTransform;
+        MDGModifier dgModifier;
+
+        void FILL(double x, double y, double z);
+
     protected:
-        MObject createMesh(const MTime& time, const int& width, const int& height, MObject& outData, MStatus& stat);
+        MObject createMesh(const MTime& time, const int& width, const int& height, const double& s, MObject& outData, MStatus& stat);
+    
+    private:
+        void createPlane(int width, int height, double s);
 };

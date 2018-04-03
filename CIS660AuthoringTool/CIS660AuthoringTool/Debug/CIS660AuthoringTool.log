@@ -1,4 +1,9 @@
-﻿  CIS660AuthoringToolCmd.cpp
+﻿  PluginMain.cpp
+  CIS660AuthoringToolNode.cpp
+  CIS660AuthoringToolCmd.cpp
+CIS660AuthoringToolCmd.cpp(68): warning C4273: 'MPxNode::dependsOn': inconsistent dll linkage
+  C:\Program Files\Autodesk\Maya2016\include\maya/MPxNode.h(184): note: see previous definition of 'dependsOn'
+  Generating Code...
      Creating library Debug\CIS660AuthoringTool.lib and object Debug\CIS660AuthoringTool.exp
   CIS660AuthoringTool.vcxproj -> C:\Users\SIG\Documents\GitHub\CIS660AuthoringTool\CIS660AuthoringTool\CIS660AuthoringTool\Debug\CIS660AuthoringTool.mll
   CIS660AuthoringTool.vcxproj -> Debug\CIS660AuthoringTool.pdb (Full PDB)

@@ -34,9 +34,9 @@ MStatus initializePlugin(MObject obj)
         return status;
         }
 
-    plugin.setName("LSystem");
+    plugin.setName("CIS660AuthoringTool");
 
-    status = plugin.registerNode("LSystemNode", CIS660AuthoringToolNode::id, CIS660AuthoringToolNode::creator, CIS660AuthoringToolNode::initialize);
+    status = plugin.registerNode("CIS660AuthoringToolNode", CIS660AuthoringToolNode::id, CIS660AuthoringToolNode::creator, CIS660AuthoringToolNode::initialize);
     if (!status) {
         CHECK_MSTATUS_AND_RETURN_IT(status);
         }
@@ -45,7 +45,7 @@ MStatus initializePlugin(MObject obj)
     //MString s = plugin.loadPath();
     //sprintf_s(buffer, 2048, "source \"%s/LSystemCmd.mel\";", s.asChar());
     std::string s = plugin.loadPath().asChar();
-    sprintf_s(buffer, 2048, "source \"%s/CIS660AuthoringToolNode\";", plugin.loadPath().asChar());
+    sprintf_s(buffer, 2048, "source \"%s/CIS660AuthoringToolMelScript\";", plugin.loadPath().asChar());
     MGlobal::executeCommand(buffer, true);
 
     return status;
@@ -65,7 +65,7 @@ MStatus uninitializePlugin(MObject obj)
     status = plugin.deregisterNode(CIS660AuthoringToolNode::id);
     if (!status) {
         CHECK_MSTATUS_AND_RETURN_IT(status);
-        }
+    }
     
     return status;
 }

@@ -16,9 +16,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CIS660AuthoringToolCmd.cpp" />
+    <ClCompile Include="CIS660AuthoringToolNode.cpp" />
+    <ClCompile Include="PluginMain.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="CIS660AuthoringToolCreateUI.mel" />
+    <ClInclude Include="CIS660AuthoringToolCmd.h" />
+    <ClInclude Include="CIS660AuthoringToolNode.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <Keyword>Win32Proj</Keyword>
