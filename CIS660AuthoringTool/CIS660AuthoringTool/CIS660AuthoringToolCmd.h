@@ -39,6 +39,11 @@ using namespace cimg_library;
 #define HMPATH "-hp"
 #define HMPATH_LONG "-hpath"
 
+#define MIN_DEPTH "-mnd"
+#define MIN_DEPTH_LONG "-mindepth"
+#define MAX_DEPTH "-mxd"
+#define MAX_DEPTH_LONG "-maxdepth"
+
 #define McheckErr(stat,msg)             \
         if ( MS::kSuccess != stat ) {   \
                 cerr << msg;            \
@@ -82,6 +87,9 @@ public:
     double lookUpHeight(double x, double z);
     double remap(double value, double low1, double low2, double high1, double high2);
 
+    double minDepth = 0;
+    double maxDepth = 100;
+
    
     static MSyntax newSyntax() {
         MSyntax syntax;
@@ -89,6 +97,8 @@ public:
         syntax.addFlag(HEIGHT, HEIGHT_LONG, MSyntax::kLong);
         syntax.addFlag(SIZE, SIZE_LONG, MSyntax::kDouble);
         syntax.addFlag(HMPATH, HMPATH_LONG, MSyntax::kString);
+        syntax.addFlag(MIN_DEPTH, MIN_DEPTH_LONG, MSyntax::kDouble);
+        syntax.addFlag(MAX_DEPTH, MAX_DEPTH_LONG, MSyntax::kDouble); 
         return syntax;
     }
 };

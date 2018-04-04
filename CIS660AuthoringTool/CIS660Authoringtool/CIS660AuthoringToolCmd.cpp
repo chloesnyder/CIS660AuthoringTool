@@ -35,6 +35,11 @@ double  CIS660AuthoringToolCmd::lookUpHeight(double x, double z)
 
     double height = (.3 * r) + (.59 * g) + (.11 * b);
 
+    //remap height to be in a certain range based on slider
+    double maxHeight = (.3 * 255) + (.58 * 255) + (.11 * 255); // 252.45 is max height
+    double minHeight = 0;
+    height = remap(height, minHeight, minDepth, maxHeight, maxDepth);
+
     return height;
 }
 
@@ -147,6 +152,14 @@ MStatus CIS660AuthoringToolCmd::doIt(const MArgList& args)
     if (parser.isFlagSet(HMPATH))
     {
         parser.getFlagArgument(HMPATH, 0, heightMapPath);
+    }
+    if (parser.isFlagSet(MIN_DEPTH))
+    {
+        parser.getFlagArgument(MIN_DEPTH, 0, minDepth);
+    }
+    if (parser.isFlagSet(MAX_DEPTH))
+    {
+        parser.getFlagArgument(MAX_DEPTH, 0, maxDepth);
     }
   
     std::string file_path = heightMapPath.asChar();
