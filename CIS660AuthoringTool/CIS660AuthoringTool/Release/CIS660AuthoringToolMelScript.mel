@@ -4,48 +4,32 @@ global int $valWidth = 128;
 global float $valSize= 2;
 
 global string $heightMapPath = 0;
-global string $heightMap = 0;
 
 
 global proc fileDialog()
 {
 	global string $heightMapPath;
-	global string $heightMap;
 
-
-	$heightMapPath = `fileDialog -dm "*.png"`;
+	$heightMapPath = `fileDialog -dm "*.bmp"`;
 	$file = `fopen $heightMapPath "r"`;
-    $heightMap = `fread $file $heightMap`;
-    image -i heightMapPath;
     scrollField -edit -text $heightMapPath heightMapScroll;
     fclose $file;
 }
 
-//global proc createNode() {
-//	createNode transform -n CIS660AuthoringTool1;
-//	createNode mesh -n CIS660AuthoringToolShape1 -p CIS660AuthoringTool1;
-//	sets -add initialShadingGroup CIS660AuthoringToolShape1;
-//	createNode CIS660AuthoringToolNode -n CIS660AuthoringToolNode1;
-//	connectAttr time1.outTime CIS660AuthoringToolNode1.time;
-//	connectAttr CIS660AuthoringToolNode1.outputMesh CIS660AuthoringToolShape1.inMesh;
-//
-//}
-
 
 global proc executeCommand()
 {
-	//global string $grammar;
+	global string $heightMapPath;
 	$valHeight = `intSliderGrp -query -value width`;
 	$valWidth = `intSliderGrp -query -value height`;
 	$valSize = `floatSliderGrp -query -value size`;
-	CIS660AuthoringToolCmd -w $valWidth -h $valHeight -s $valSize;
+	CIS660AuthoringToolCmd -w $valWidth -h $valHeight -s $valSize -hp $heightMapPath;
 }
 
 global proc windowFunction()
 {
     window;
 		columnLayout;
-		//image -i heightMapPath;
 		scrollField -wordWrap on -text "HeightMap" heightMapScroll;
 		button -command fileDialog -label "Browse for heightmap file";
 		intSliderGrp -minValue 1 -maxValue 256 -step 1 -label "Height" -field true height;
@@ -58,4 +42,3 @@ global proc windowFunction()
 
 menu -parent MayaWindow -label "CIS660AuthoringTool Command" -tearOff true menu1;
 	menuItem -label "CIS660AuthoringTool Command" -command "windowFunction();";
-	//menuItem -label "Create node" -command "createNode();";

@@ -24,7 +24,11 @@
 #include <maya/MFloatPointArray.h>
 #include <maya/MDagPath.h>
 #include <maya/MFnMesh.h>
+#include <iostream>
+#include <math.h>
 
+#include "CImg.h"
+using namespace cimg_library;
 
 #define WIDTH "-w"
 #define WIDTH_LONG "-width"
@@ -32,6 +36,8 @@
 #define HEIGHT_LONG "-height"
 #define SIZE "-s"
 #define SIZE_LONG "-size"
+#define HMPATH "-hp"
+#define HMPATH_LONG "-hpath"
 
 #define McheckErr(stat,msg)             \
         if ( MS::kSuccess != stat ) {   \
@@ -66,17 +72,23 @@ public:
     MFloatPointArray pa;
     MIntArray faceCounts;
     MIntArray faceConnects;
+
+    CImg<float> heightMap;
   
     MObject newTransform;
     MDGModifier dgModifier;
 
     void FILL(double x, double y, double z);
+    double lookUpHeight(double x, double z);
+    double remap(double value, double low1, double low2, double high1, double high2);
 
+   
     static MSyntax newSyntax() {
         MSyntax syntax;
         syntax.addFlag(WIDTH, WIDTH_LONG, MSyntax::kLong);
         syntax.addFlag(HEIGHT, HEIGHT_LONG, MSyntax::kLong);
         syntax.addFlag(SIZE, SIZE_LONG, MSyntax::kDouble);
+        syntax.addFlag(HMPATH, HMPATH_LONG, MSyntax::kString);
         return syntax;
     }
 };
