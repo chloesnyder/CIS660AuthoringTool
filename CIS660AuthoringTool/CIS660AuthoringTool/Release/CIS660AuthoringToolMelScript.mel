@@ -29,6 +29,16 @@ global proc executeCommand()
 	CIS660AuthoringToolCmd -w $valWidth -h $valHeight -s $valSize -hp $heightMapPath -mnd $valMinDepth -mxd $valMaxDepth;
 }
 
+global proc createNode() {
+	createNode transform -n CIS660AuthoringTool1;
+	createNode mesh -n CIS660AuthoringToolShape1 -p CIS660AuthoringTool1;
+	sets -add initialShadingGroup CIS660AuthoringToolShape1;
+	createNode CIS660AuthoringToolNode -n CIS660AuthoringToolNode1;
+	connectAttr time1.outTime CIS660AuthoringToolNode1.time;
+	connectAttr CIS660AuthoringToolNode1.outputMesh CIS660AuthoringToolShape1.inMesh;
+
+}
+
 global proc windowFunction()
 {
     window;
@@ -47,3 +57,4 @@ global proc windowFunction()
 
 menu -parent MayaWindow -label "CIS660AuthoringTool Command" -tearOff true menu1;
 	menuItem -label "CIS660AuthoringTool Command" -command "windowFunction();";
+	menuItem -label "Create node" -command "createNode();";

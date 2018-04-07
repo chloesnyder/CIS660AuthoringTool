@@ -212,3 +212,13 @@ MStatus CIS660AuthoringToolCmd::doIt(const MArgList& args)
   
 }
 
+MStatus MPxNode::dependsOn(const MPlug &, const MPlug &, bool &) const
+    {
+    return MS::kUnknownParameter;
+    }
+//
+//MStatus MPxNode::dependsOn(const MPlug &, const MPlug &, bool &) const
+//{
+//    return MS::kUnknownParameter;
+//}
+

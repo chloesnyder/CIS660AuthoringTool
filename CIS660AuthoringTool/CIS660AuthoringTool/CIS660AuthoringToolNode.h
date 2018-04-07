@@ -23,6 +23,9 @@
 #include <sstream>
 #include <maya/MGlobal.h>
 
+#include "include/CImg.h"
+using namespace cimg_library;
+
 
 #define McheckErr(stat,msg)             \
         if ( MS::kSuccess != stat ) {   \
@@ -43,6 +46,9 @@ class CIS660AuthoringToolNode : public MPxNode
         static MObject time;
         static MObject width;
         static MObject height;
+        static MObject mindepth;
+        static MObject maxdepth;
+        static MObject hpath;
         static MObject size;
         static MObject outputMesh;
 
@@ -58,11 +64,21 @@ class CIS660AuthoringToolNode : public MPxNode
         MIntArray faceCounts;
         MIntArray faceConnects;
 
+        CImg<float> heightMap;
 
         void FILL(double x, double y, double z);
+        double lookUpHeight(double x, double z);
+        double remap(double value, double low1, double low2, double high1, double high2);
+
+        double minDepth = 0;
+        double maxDepth = 100;
+
+        MObject newTransform;
+        MDGModifier dgModifier;
 
     protected:
-        MObject createMesh(const MTime& time, const int& width, const int& height, const double& s, MObject& outData, MStatus& stat);
+        MObject createMesh(const MTime& time, const int& width, const int& height, const double& s, 
+                           const double& min_depth, const double& max_depth, const MString& heightPath, MObject& outData, MStatus& stat);
     
     private:
         void createPlane(int width, int height, double s);

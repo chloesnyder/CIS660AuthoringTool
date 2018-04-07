@@ -27,7 +27,9 @@
 #include <iostream>
 #include <math.h>
 
-#include "CImg.h"
+#include <maya/MPxNode.h>
+
+#include "include/CImg.h"
 using namespace cimg_library;
 
 #define WIDTH "-w"
@@ -79,9 +81,6 @@ public:
     MIntArray faceConnects;
 
     CImg<float> heightMap;
-  
-    MObject newTransform;
-    MDGModifier dgModifier;
 
     void FILL(double x, double y, double z);
     double lookUpHeight(double x, double z);
@@ -90,7 +89,8 @@ public:
     double minDepth = 0;
     double maxDepth = 100;
 
-   
+    MObject newTransform;
+    MDGModifier dgModifier;
     static MSyntax newSyntax() {
         MSyntax syntax;
         syntax.addFlag(WIDTH, WIDTH_LONG, MSyntax::kLong);
