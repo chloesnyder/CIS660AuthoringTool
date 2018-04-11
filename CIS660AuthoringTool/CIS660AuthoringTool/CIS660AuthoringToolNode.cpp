@@ -2,6 +2,7 @@
 #define MNoPluginEntry
 
 #include "CIS660AuthoringToolNode.h"
+#include <maya/MFnInstancer.h>
 
 MTypeId CIS660AuthoringToolNode::id(0x8000);
 MObject CIS660AuthoringToolNode::time;
@@ -13,6 +14,9 @@ MObject CIS660AuthoringToolNode::hpath;
 MObject CIS660AuthoringToolNode::size;
 MObject CIS660AuthoringToolNode::outputMesh;
 
+MObject CIS660AuthoringToolNode::outPoints;
+MObject CIS660AuthoringToolNode::inNumPoints;
+
 MStatus CIS660AuthoringToolNode::initialize()
 {
     MFnUnitAttribute unitAttr;
@@ -22,6 +26,7 @@ MStatus CIS660AuthoringToolNode::initialize()
     MStatus returnStatus;
 
     // init attributes
+
     CIS660AuthoringToolNode::time = unitAttr.create("time", "tm", MFnUnitAttribute::kTime, 0.0, &returnStatus);
     McheckErr(returnStatus, "ERROR creating CIS660AuthoringToolNode time attribute\n");
 
@@ -43,8 +48,15 @@ MStatus CIS660AuthoringToolNode::initialize()
     CIS660AuthoringToolNode::hpath = typedAttr.MFnTypedAttribute::create("hpath", "hp", MFnData::kString, &returnStatus);
     McheckErr(returnStatus, "ERROR creating CIS660AuthoringToolNode height path attribute\n");
 
+    CIS660AuthoringToolNode::inNumPoints = numAttr.MFnNumericAttribute::create("inputPoints", "ip", MFnNumericData::kLong, 0, &returnStatus);
+    McheckErr(returnStatus, "ERROR creating CIS660AuthoringToolNode inputPoints attribute\n");
+
     CIS660AuthoringToolNode::outputMesh = typedAttr.create("outputMesh", "out", MFnData::kMesh, &returnStatus);
     McheckErr(returnStatus, "ERROR creating CIS660AuthoringToolNode output mesh attribute\n");
+    CHECK_MSTATUS(typedAttr.setStorable(false));
+
+    CIS660AuthoringToolNode::outPoints = typedAttr.create("outPoints", "out_p", MFnData::kDynArrayAttrs, &returnStatus);
+    McheckErr(returnStatus, "ERROR creating CIS660AuthoringtoolNode output points attribute\n");
     CHECK_MSTATUS(typedAttr.setStorable(false));
 
     // add attributes
@@ -64,6 +76,10 @@ MStatus CIS660AuthoringToolNode::initialize()
     McheckErr(returnStatus, "ERROR adding height path attribute\n");
     returnStatus = addAttribute(CIS660AuthoringToolNode::outputMesh);
     McheckErr(returnStatus, "ERROR adding output mesh attribute\n");
+    returnStatus = addAttribute(CIS660AuthoringToolNode::inNumPoints);
+    McheckErr(returnStatus, "ERROR adding in points attribute\n");
+    returnStatus = addAttribute(CIS660AuthoringToolNode::outPoints);
+    McheckErr(returnStatus, "ERROR adding output points attribute\n");
 
     // attribute affects
     returnStatus = attributeAffects(CIS660AuthoringToolNode::width, CIS660AuthoringToolNode::outputMesh);
@@ -81,11 +97,19 @@ MStatus CIS660AuthoringToolNode::initialize()
     returnStatus = attributeAffects(CIS660AuthoringToolNode::time, CIS660AuthoringToolNode::outputMesh);
     McheckErr(returnStatus, "ERROR in attributeAffects (time affecting outputMesh)\n");
 
+
+    returnStatus = attributeAffects(CIS660AuthoringToolNode::inNumPoints, CIS660AuthoringToolNode::outPoints);
+    McheckErr(returnStatus, "ERROR in attributeAffects (inNumPoints affecting outPoints)\n");
+    returnStatus = attributeAffects(CIS660AuthoringToolNode::time, CIS660AuthoringToolNode::outPoints);
+    McheckErr(returnStatus, "ERROR in attributeAffects (time affecting outPoints)\n");
+
     return MS::kSuccess;
 }
 
 MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
 {
+
+    
     MStatus returnStatus;
     if (plug == outputMesh)
         {
@@ -123,22 +147,73 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
         McheckErr(returnStatus, "Error getting height path data handle\n");
         MString heightPathVal = heightPathData.asString();
 
+        // get num points
+        MDataHandle inNumPointsData = data.inputValue(inNumPoints, &returnStatus);
+        McheckErr(returnStatus, "Error getting num points data handle\n");
+        int inNumPointsVal = inNumPointsData.asInt();
+
         //get output object
         MDataHandle outputHandle = data.outputValue(outputMesh, &returnStatus);
         McheckErr(returnStatus, "ERROR getting geometry data handle\n");
+
+        MDataHandle outputPointsHandle = data.outputValue(outPoints, &returnStatus);
+        McheckErr(returnStatus, "ERROR getting out points data handle\n");
 
         MFnMeshData dataCreator;
         MObject newOutputData = dataCreator.create(&returnStatus);
         McheckErr(returnStatus, "ERROR creating outputData");
 
+        MFnArrayAttrsData pointDataCreator;
+        MObject newOutPointData = pointDataCreator.create(&returnStatus);
+        McheckErr(returnStatus, "ERROR creating newOutPointData");
+
+        // mesh creation
         createMesh(timeVal, widthVal, heightVal, sizeVal, minDepthVal, maxDepthVal, heightPathVal, newOutputData, returnStatus);
         McheckErr(returnStatus, "ERROR creating mesh");
 
+        //random point distribution
+        createInstancesOfObject(timeVal, widthVal, heightVal, sizeVal, minDepthVal, maxDepthVal, inNumPointsVal, newOutPointData, returnStatus);
+        McheckErr(returnStatus, "ERROR creating outpoints");
+
+        // not sure if I can do 2 output handles... may need to merge meshes and output that
         outputHandle.set(newOutputData);
+        outputPointsHandle.set(newOutPointData);
         data.setClean(plug);
 
         }
+
+
+    
     return MS::kSuccess;
+}
+
+MObject CIS660AuthoringToolNode::createInstancesOfObject(const MTime& time, const int& width, const int& height, const double& s,
+                                const double& min_depth, const double& max_depth, const int& in_num_points, MObject& newOutPointData, MStatus& stat)
+{
+    
+    MFnArrayAttrsData pointsAAD;
+    MObject pointsObject = pointsAAD.create();
+    MVectorArray positionArray = pointsAAD.vectorArray("position");
+    MDoubleArray idArray = pointsAAD.doubleArray("id");
+
+    // loop to fill the arrays
+    for (int i = 0; i < in_num_points; i++)
+    {
+        // randomly generate an x coord and z coord within [0, width] and [0, height], then remap
+        // look up the height in the image for y coord
+        int rx = rand() % width;
+        int rz = rand() % height;
+        double remapX = remap(rx, (-s / 2.0), 0.0, (s / 2.0), 255.0);
+        double remapZ = remap(rz, (-s / 2.0), 0.0, (s / 2.0), 255.0);
+        double y = lookUpHeight(remapX, remapZ);
+
+        positionArray.append(MVector(remapX, y, remapZ));
+        idArray.append(i);
+    }
+
+    newOutPointData = pointsObject;
+
+    return newOutPointData;
 }
 
 void CIS660AuthoringToolNode::FILL(double x, double  y, double z)
@@ -175,7 +250,6 @@ void CIS660AuthoringToolNode::createPlane(int width, int height, double s)
         {
         for (x = -size / 2.0; x <= size / 2.0; x += wSize)
             {
-            // TODO: replace 0 with looking up the height value from our image that corresponds to x and z
             // remap x and z from range [-size/2.0, size/2.0] to range [0,256]
             double remapX = remap(x, (-size / 2.0), 0.0, (size / 2.0), 255.0);
             double remapZ = remap(z, (-size / 2.0), 0.0, (size / 2.0), 255.0);
@@ -208,6 +282,101 @@ void CIS660AuthoringToolNode::createPlane(int width, int height, double s)
     num_face_connects = num_faces * edges_per_face;
     num_edges = num_face_connects / 2;
 }
+
+
+/*MDagPath  CIS660AuthoringToolNode::createCube()
+{
+    MStatus stat;
+
+    int num_verts_cube = 8;
+    int num_faces_cube = 6;
+    int num_edges_cube;
+    int edges_per_face_cube = 4;
+    int num_face_connects_cube;
+    int* p_gons_cube = cube_gons;
+   
+    MFnMesh fnPoly_cube;
+    MFloatPointArray iarr_cube;
+    MFloatPointArray pa_cube;
+    MIntArray faceCounts_cube;
+    MIntArray faceConnects_cube;
+
+    MObject newTransform_cube;
+    MDGModifier dgModifier_cube;
+
+
+    // First, create the points:
+    double a = sqrt(1.0 / 3.0);
+
+    MFloatPoint pnt1(a, a, a);
+    MFloatPoint pnt2(a, -a, a);
+    MFloatPoint pnt3(-a, -a, a);
+    MFloatPoint pnt4(-a, a, a);
+    MFloatPoint pnt5(a, a, -a);
+    MFloatPoint pnt6(a, -a, -a);
+    MFloatPoint pnt7(-a, -a, -a);
+    MFloatPoint pnt8(-a, a, -a);
+    iarr_cube.append(pnt1);
+    iarr_cube.append(pnt2);
+    iarr_cube.append(pnt3);
+    iarr_cube.append(pnt4);
+    iarr_cube.append(pnt5);
+    iarr_cube.append(pnt6);
+    iarr_cube.append(pnt7);
+    iarr_cube.append(pnt8);
+
+    int i;
+    for (i = 0; i<num_verts_cube; i++)
+        pa_cube.append(iarr_cube[i]);
+
+    // If we are using polygon data then set up the face connect array
+    // here. Otherwise, the create function will do it.
+    //
+    if (NULL != p_gons_cube) {
+        num_face_connects_cube = num_faces_cube * edges_per_face_cube;
+        num_edges_cube = num_face_connects_cube / 2;
+
+        for (i = 0; i<num_faces_cube; i++)
+            faceCounts_cube.append(edges_per_face_cube);
+
+        for (i = 0; i<(num_faces_cube*edges_per_face_cube); i++)
+            faceConnects_cube.append(p_gons_cube[i] - 1);
+        }
+
+    // Call the poly creation method to create the polygon
+    newTransform_cube = fnPoly_cube.create(num_verts_cube, num_faces_cube, pa_cube,
+                                 faceCounts_cube, faceConnects_cube, MObject::kNullObj, &stat);
+    //McheckErr(stat,"Could not create MFnMesh");
+
+    // Primitive is created so tell shape it has changed
+    //
+    fnPoly_cube.updateSurface();
+
+    dgModifier_cube.renameNode(newTransform_cube, "pPrimitive1");
+    dgModifier_cube.doIt();
+
+    //
+    // Put the polygon into a shading group
+    MString cmd("sets -e -fe initialShadingGroup ");
+    cmd += fnPoly_cube.name();
+    dgModifier_cube.commandToExecute(cmd);
+
+    MFnDagNode fnDagNode_cube(newTransform_cube, &stat);
+    if (MS::kSuccess == stat)
+        {
+        cmd = "select ";
+        cmd += fnDagNode_cube.name();
+        dgModifier_cube.commandToExecute(cmd);
+        }
+
+    dgModifier_cube.doIt();
+
+    MDagPath dagPath_cube = fnDagNode_cube.dagPath();
+
+    
+
+}*/
+
 
 double CIS660AuthoringToolNode::remap(double value, double low1, double low2, double high1, double high2)
 {

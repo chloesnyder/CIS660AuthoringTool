@@ -1,12 +1,5 @@
-﻿  CIS660AuthoringToolCmd.cpp
-CIS660AuthoringToolCmd.cpp(29): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-CIS660AuthoringToolCmd.cpp(30): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-CIS660AuthoringToolCmd.cpp(216): warning C4273: 'MPxNode::dependsOn': inconsistent dll linkage
-  C:\Program Files\Autodesk\Maya2016\include\maya/MPxNode.h(184): note: see previous definition of 'dependsOn'
-  CIS660AuthoringToolNode.cpp
-CIS660AuthoringToolNode.cpp(227): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-CIS660AuthoringToolNode.cpp(228): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-  PluginMain.cpp
-  Generating Code...
+﻿  CIS660AuthoringToolNode.cpp
+CIS660AuthoringToolNode.cpp(396): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(397): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
      Creating library Release\CIS660AuthoringTool.lib and object Release\CIS660AuthoringTool.exp
   CIS660AuthoringTool.vcxproj -> C:\Users\SIG\Documents\GitHub\CIS660AuthoringTool\CIS660AuthoringTool\CIS660AuthoringTool\Release\CIS660AuthoringTool.mll

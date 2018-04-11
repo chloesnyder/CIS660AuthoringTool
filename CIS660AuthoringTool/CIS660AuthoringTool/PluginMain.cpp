@@ -18,6 +18,7 @@
 #include <maya/MSyntax.h>
 #include <list>
 
+
 #include "CIS660AuthoringToolCmd.h"
 #include "CIS660AuthoringToolNode.h"
 

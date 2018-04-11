@@ -1,5 +1,6 @@
 #pragma once
 #include <maya/MPxNode.h>
+#include <stdlib.h>
 
 #include <maya/MFnPlugin.h>
 #include <maya/MTime.h>
@@ -20,8 +21,12 @@
 #include <maya/MFnMeshData.h>
 #include <maya/MIOStream.h>
 
+#include <maya/MFnArrayAttrsData.h>
+
 #include <sstream>
 #include <maya/MGlobal.h>
+
+
 
 #include "include/CImg.h"
 using namespace cimg_library;
@@ -32,6 +37,15 @@ using namespace cimg_library;
                 cerr << msg;            \
                 return MS::kFailure;    \
         }
+
+static int cube_gons[24] = {
+    1,4,3,2,
+    8,5,6,7,
+    3,7,6,2,
+    1,5,8,4,
+    3,4,8,7,
+    2,6,5,1
+    };
 
 class CIS660AuthoringToolNode : public MPxNode
 {
@@ -51,6 +65,9 @@ class CIS660AuthoringToolNode : public MPxNode
         static MObject hpath;
         static MObject size;
         static MObject outputMesh;
+
+        static MObject outPoints;
+        static MObject inNumPoints;
 
         // Poly primitive
         int num_verts;                  // Number of vertices of polygon
@@ -79,6 +96,8 @@ class CIS660AuthoringToolNode : public MPxNode
     protected:
         MObject createMesh(const MTime& time, const int& width, const int& height, const double& s, 
                            const double& min_depth, const double& max_depth, const MString& heightPath, MObject& outData, MStatus& stat);
+        MObject createInstancesOfObject(const MTime& time, const int& width, const int& height, const double& s,
+                                        const double& min_depth, const double& max_depth, const int& in_num_points, MObject& newOutPointData, MStatus& stat);
     
     private:
         void createPlane(int width, int height, double s);
