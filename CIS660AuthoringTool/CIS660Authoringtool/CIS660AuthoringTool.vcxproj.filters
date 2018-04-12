@@ -32,12 +32,18 @@
     <ClCompile Include="CIS660AuthoringToolNode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Instancer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CIS660AuthoringToolCmd.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CIS660AuthoringToolNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Instancer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -55,9 +55,12 @@ MStatus CIS660AuthoringToolNode::initialize()
     McheckErr(returnStatus, "ERROR creating CIS660AuthoringToolNode output mesh attribute\n");
     CHECK_MSTATUS(typedAttr.setStorable(false));
 
-    CIS660AuthoringToolNode::outPoints = typedAttr.create("outPoints", "out_p", MFnData::kDynArrayAttrs, &returnStatus);
+    CIS660AuthoringToolNode::outPoints = typedAttr.create("outPoints", "out_p", MFnArrayAttrsData::kDynArrayAttrs, &returnStatus);
     McheckErr(returnStatus, "ERROR creating CIS660AuthoringtoolNode output points attribute\n");
     CHECK_MSTATUS(typedAttr.setStorable(false));
+    CHECK_MSTATUS(typedAttr.setWritable(false));
+    CHECK_MSTATUS(typedAttr.setKeyable(false));
+    CHECK_MSTATUS(typedAttr.setReadable(true));
 
     // add attributes
     returnStatus = addAttribute(CIS660AuthoringToolNode::time);
@@ -81,7 +84,7 @@ MStatus CIS660AuthoringToolNode::initialize()
     returnStatus = addAttribute(CIS660AuthoringToolNode::outPoints);
     McheckErr(returnStatus, "ERROR adding output points attribute\n");
 
-    // attribute affects
+    // attribute affects output mesh
     returnStatus = attributeAffects(CIS660AuthoringToolNode::width, CIS660AuthoringToolNode::outputMesh);
     McheckErr(returnStatus, "ERROR in attributeAffects (width affecting outputMesh)\n");
     returnStatus = attributeAffects(CIS660AuthoringToolNode::height, CIS660AuthoringToolNode::outputMesh);
@@ -97,11 +100,23 @@ MStatus CIS660AuthoringToolNode::initialize()
     returnStatus = attributeAffects(CIS660AuthoringToolNode::time, CIS660AuthoringToolNode::outputMesh);
     McheckErr(returnStatus, "ERROR in attributeAffects (time affecting outputMesh)\n");
 
-
+    // attribute affect output points
     returnStatus = attributeAffects(CIS660AuthoringToolNode::inNumPoints, CIS660AuthoringToolNode::outPoints);
     McheckErr(returnStatus, "ERROR in attributeAffects (inNumPoints affecting outPoints)\n");
     returnStatus = attributeAffects(CIS660AuthoringToolNode::time, CIS660AuthoringToolNode::outPoints);
     McheckErr(returnStatus, "ERROR in attributeAffects (time affecting outPoints)\n");
+    returnStatus = attributeAffects(CIS660AuthoringToolNode::width, CIS660AuthoringToolNode::outPoints);
+    McheckErr(returnStatus, "ERROR in attributeAffects (width affecting outputMesh)\n");
+    returnStatus = attributeAffects(CIS660AuthoringToolNode::height, CIS660AuthoringToolNode::outPoints);
+    McheckErr(returnStatus, "ERROR in attributeAffects (height affecting outPoints)\n");
+    returnStatus = attributeAffects(CIS660AuthoringToolNode::size, CIS660AuthoringToolNode::outPoints);
+    McheckErr(returnStatus, "ERROR in attributeAffects (size affecting outPoints)\n");
+    returnStatus = attributeAffects(CIS660AuthoringToolNode::mindepth, CIS660AuthoringToolNode::outPoints);
+    McheckErr(returnStatus, "ERROR in attributeAffects (mindepth affecting outPoints)\n");
+    returnStatus = attributeAffects(CIS660AuthoringToolNode::maxdepth, CIS660AuthoringToolNode::outPoints);
+    McheckErr(returnStatus, "ERROR in attributeAffects (maxdepth affecting outPoints)\n");
+    returnStatus = attributeAffects(CIS660AuthoringToolNode::hpath, CIS660AuthoringToolNode::outPoints);
+    McheckErr(returnStatus, "ERROR in attributeAffects (hpath affecting outPoints)\n");
 
     return MS::kSuccess;
 }
@@ -111,7 +126,7 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
 
     
     MStatus returnStatus;
-    if (plug == outputMesh)
+    if ((plug == outputMesh) || (plug == outPoints))
         {
         //get time
         MDataHandle timeData = data.inputValue(time, &returnStatus);
@@ -151,35 +166,33 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
         MDataHandle inNumPointsData = data.inputValue(inNumPoints, &returnStatus);
         McheckErr(returnStatus, "Error getting num points data handle\n");
         int inNumPointsVal = inNumPointsData.asInt();
-
+      
+      
+        // Mesh output
         //get output object
         MDataHandle outputHandle = data.outputValue(outputMesh, &returnStatus);
         McheckErr(returnStatus, "ERROR getting geometry data handle\n");
-
-        MDataHandle outputPointsHandle = data.outputValue(outPoints, &returnStatus);
-        McheckErr(returnStatus, "ERROR getting out points data handle\n");
-
         MFnMeshData dataCreator;
         MObject newOutputData = dataCreator.create(&returnStatus);
         McheckErr(returnStatus, "ERROR creating outputData");
+        // mesh creation
+        createMesh(timeVal, widthVal, heightVal, sizeVal, minDepthVal, maxDepthVal, heightPathVal, newOutputData, returnStatus);
+        McheckErr(returnStatus, "ERROR creating mesh");
+        outputHandle.set(newOutputData);
+        data.setClean(outputMesh);
+
 
         MFnArrayAttrsData pointDataCreator;
         MObject newOutPointData = pointDataCreator.create(&returnStatus);
         McheckErr(returnStatus, "ERROR creating newOutPointData");
-
-        // mesh creation
-        createMesh(timeVal, widthVal, heightVal, sizeVal, minDepthVal, maxDepthVal, heightPathVal, newOutputData, returnStatus);
-        McheckErr(returnStatus, "ERROR creating mesh");
-
         //random point distribution
         createInstancesOfObject(timeVal, widthVal, heightVal, sizeVal, minDepthVal, maxDepthVal, inNumPointsVal, newOutPointData, returnStatus);
         McheckErr(returnStatus, "ERROR creating outpoints");
-
-        // not sure if I can do 2 output handles... may need to merge meshes and output that
-        outputHandle.set(newOutputData);
+        MDataHandle outputPointsHandle = data.outputValue(outPoints, &returnStatus);
+        McheckErr(returnStatus, "ERROR getting out points data handle\n");
         outputPointsHandle.set(newOutPointData);
-        data.setClean(plug);
-
+        data.setClean(outPoints);
+     
         }
 
 
@@ -191,6 +204,9 @@ MObject CIS660AuthoringToolNode::createInstancesOfObject(const MTime& time, cons
                                 const double& min_depth, const double& max_depth, const int& in_num_points, MObject& newOutPointData, MStatus& stat)
 {
     
+    // Fix what's happening with pointsData https://github.com/chloesnyder/CIS660HW3/blob/master/randomNode.py
+    //data.outputValue(newOutPointData);
+
     MFnArrayAttrsData pointsAAD;
     MObject pointsObject = pointsAAD.create();
     MVectorArray positionArray = pointsAAD.vectorArray("position");

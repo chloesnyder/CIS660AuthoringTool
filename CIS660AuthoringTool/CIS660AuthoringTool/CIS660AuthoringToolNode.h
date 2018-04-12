@@ -2,7 +2,6 @@
 #include <maya/MPxNode.h>
 #include <stdlib.h>
 
-#include <maya/MFnPlugin.h>
 #include <maya/MTime.h>
 #include <maya/MFnMesh.h>
 #include <maya/MPoint.h>
@@ -37,15 +36,6 @@ using namespace cimg_library;
                 cerr << msg;            \
                 return MS::kFailure;    \
         }
-
-static int cube_gons[24] = {
-    1,4,3,2,
-    8,5,6,7,
-    3,7,6,2,
-    1,5,8,4,
-    3,4,8,7,
-    2,6,5,1
-    };
 
 class CIS660AuthoringToolNode : public MPxNode
 {
