@@ -87,7 +87,7 @@ class CIS660AuthoringToolNode : public MPxNode
         MObject createMesh(const MTime& time, const int& width, const int& height, const double& s, 
                            const double& min_depth, const double& max_depth, const MString& heightPath, MObject& outData, MStatus& stat);
         MObject createInstancesOfObject(const MTime& time, const int& width, const int& height, const double& s,
-                                        const double& min_depth, const double& max_depth, const int& in_num_points, MObject& newOutPointData, MStatus& stat);
+                                        const double& min_depth, const double& max_depth, const int& in_num_points, const MPlug& plug, MDataBlock& data, MStatus& stat);
     
     private:
         void createPlane(int width, int height, double s);

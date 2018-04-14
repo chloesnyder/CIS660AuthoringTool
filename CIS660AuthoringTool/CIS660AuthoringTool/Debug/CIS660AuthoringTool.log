@@ -1,7 +1,5 @@
-﻿  Instancer.cpp
-Instancer.cpp : fatal error C1041: cannot open program database 'C:\Users\SIG\Documents\GitHub\CIS660AuthoringTool\CIS660AuthoringTool\CIS660AuthoringTool\Debug\CIS660AuthoringTool.pdb'; if multiple CL.EXE write to the same .PDB file, please use /FS
-  Generating Code...
-  Compiling...
-  PluginMain.cpp
-PluginMain.cpp : fatal error C1041: cannot open program database 'C:\Users\SIG\Documents\GitHub\CIS660AuthoringTool\CIS660AuthoringTool\CIS660AuthoringTool\Debug\CIS660AuthoringTool.pdb'; if multiple CL.EXE write to the same .PDB file, please use /FS
-  Generating Code...
+﻿  CIS660AuthoringToolNode.cpp
+CIS660AuthoringToolNode.cpp(454): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(455): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+  CIS660AuthoringTool.vcxproj -> C:\Users\SIG\Documents\GitHub\CIS660AuthoringTool\CIS660AuthoringTool\CIS660AuthoringTool\Debug\CIS660AuthoringTool.mll
+  CIS660AuthoringTool.vcxproj -> Debug\CIS660AuthoringTool.pdb (Full PDB)

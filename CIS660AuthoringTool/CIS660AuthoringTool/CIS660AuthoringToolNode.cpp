@@ -126,7 +126,8 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
 
     
     MStatus returnStatus;
-    if ((plug == outputMesh) || (plug == outPoints))
+ //   if ((plug == outputMesh) || (plug == outPoints))
+    if(plug == outPoints)
         {
         //get time
         MDataHandle timeData = data.inputValue(time, &returnStatus);
@@ -170,7 +171,7 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
       
         // Mesh output
         //get output object
-        MDataHandle outputHandle = data.outputValue(outputMesh, &returnStatus);
+      /*  MDataHandle outputHandle = data.outputValue(outputMesh, &returnStatus);
         McheckErr(returnStatus, "ERROR getting geometry data handle\n");
         MFnMeshData dataCreator;
         MObject newOutputData = dataCreator.create(&returnStatus);
@@ -179,19 +180,42 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
         createMesh(timeVal, widthVal, heightVal, sizeVal, minDepthVal, maxDepthVal, heightPathVal, newOutputData, returnStatus);
         McheckErr(returnStatus, "ERROR creating mesh");
         outputHandle.set(newOutputData);
-        data.setClean(outputMesh);
+        data.setClean(outputMesh);*/
 
-
+    /*    MDataHandle outputPointsHandle = data.outputValue(outPoints, &returnStatus);
+        McheckErr(returnStatus, "ERROR getting out points data handle\n");
         MFnArrayAttrsData pointDataCreator;
         MObject newOutPointData = pointDataCreator.create(&returnStatus);
-        McheckErr(returnStatus, "ERROR creating newOutPointData");
+        McheckErr(returnStatus, "ERROR creating newOutPointData");*/
         //random point distribution
-        createInstancesOfObject(timeVal, widthVal, heightVal, sizeVal, minDepthVal, maxDepthVal, inNumPointsVal, newOutPointData, returnStatus);
-        McheckErr(returnStatus, "ERROR creating outpoints");
-        MDataHandle outputPointsHandle = data.outputValue(outPoints, &returnStatus);
-        McheckErr(returnStatus, "ERROR getting out points data handle\n");
-        outputPointsHandle.set(newOutPointData);
-        data.setClean(outPoints);
+      //  createInstancesOfObject(timeVal, widthVal, heightVal, sizeVal, minDepthVal, maxDepthVal, inNumPointsVal, plug, data, returnStatus);
+        //McheckErr(returnStatus, "ERROR creating outpoints");
+        //outputPointsHandle.set(newOutPointData);
+        //data.setClean(outPoints);
+
+        MDataHandle pointsData = data.outputValue(outPoints, &returnStatus);
+        MFnArrayAttrsData pointsAAD;
+        MObject pointsObject = pointsAAD.create();
+        MVectorArray positionArray = pointsAAD.vectorArray("position");
+        MDoubleArray idArray = pointsAAD.doubleArray("id");
+        // loop to fill the arrays
+        for (int i = 0; i < inNumPointsVal; i++)
+            {
+            // randomly generate an x coord and z coord within [0, width] and [0, height], then remap
+            // look up the height in the image for y coord
+            int rx = rand() % widthVal;
+            int rz = rand() % heightVal;
+            double remapX = remap(rx, (-sizeVal / 2.0), 0.0, (sizeVal / 2.0), 255.0);
+            double remapZ = remap(rz, (-sizeVal / 2.0), 0.0, (sizeVal / 2.0), 255.0);
+            double y = lookUpHeight(remapX, remapZ);
+
+            positionArray.append(MVector(floor(rx), y, floor(rz)));
+            idArray.append(i);
+            }
+
+        pointsData.setMObject(pointsObject);
+        data.setClean(plug);
+       // return pointsObject;
      
         }
 
@@ -201,17 +225,29 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
 }
 
 MObject CIS660AuthoringToolNode::createInstancesOfObject(const MTime& time, const int& width, const int& height, const double& s,
-                                const double& min_depth, const double& max_depth, const int& in_num_points, MObject& newOutPointData, MStatus& stat)
+                                const double& min_depth, const double& max_depth, const int& in_num_points, const MPlug& plug, MDataBlock& data, MStatus& stat)
 {
     
     // Fix what's happening with pointsData https://github.com/chloesnyder/CIS660HW3/blob/master/randomNode.py
     //data.outputValue(newOutPointData);
 
+  /*  MDataHandle outputPointsHandle = data.outputValue(outPoints, &stat);
+  //  McheckErr(returnStatus, "ERROR getting out points data handle\n");
+    MFnArrayAttrsData pointDataCreator;
+    MObject newOutPointData = pointDataCreator.create(&stat);
+  //  McheckErr(returnStatus, "ERROR creating newOutPointData");
+
     MFnArrayAttrsData pointsAAD;
     MObject pointsObject = pointsAAD.create();
     MVectorArray positionArray = pointsAAD.vectorArray("position");
     MDoubleArray idArray = pointsAAD.doubleArray("id");
+    */
 
+    MDataHandle pointsData = data.outputValue(outPoints, &stat);
+    MFnArrayAttrsData pointsAAD;
+    MObject pointsObject = pointsAAD.create();
+    MVectorArray positionArray = pointsAAD.vectorArray("position");
+    MDoubleArray idArray = pointsAAD.doubleArray("id");
     // loop to fill the arrays
     for (int i = 0; i < in_num_points; i++)
     {
@@ -223,13 +259,19 @@ MObject CIS660AuthoringToolNode::createInstancesOfObject(const MTime& time, cons
         double remapZ = remap(rz, (-s / 2.0), 0.0, (s / 2.0), 255.0);
         double y = lookUpHeight(remapX, remapZ);
 
-        positionArray.append(MVector(remapX, y, remapZ));
+        positionArray.append(MVector(floor(rx), y, floor(rz)));
         idArray.append(i);
     }
 
-    newOutPointData = pointsObject;
+    pointsData.setMObject(pointsObject);
+    data.setClean(plug);
+    return pointsObject;
 
-    return newOutPointData;
+  //  McheckErr(returnStatus, "ERROR creating outpoints");
+ //   outputPointsHandle.set(newOutPointData);
+  //  data.setClean(outPoints);
+
+   // return newOutPointData;
 }
 
 void CIS660AuthoringToolNode::FILL(double x, double  y, double z)

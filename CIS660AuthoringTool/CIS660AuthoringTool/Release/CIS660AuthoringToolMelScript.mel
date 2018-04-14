@@ -47,7 +47,7 @@ global proc createNode() {
 global proc createInstancer() {
 	polySphere;
     instancer;
-    createNode instancerNode -w 256 -h 256 -s 256 -hp 0 -mnd 0 -mxd 15 -n instancerNode1;
+    createNode instancerNode -n instancerNode1;
     connectAttr pSphere1.matrix instancer1.inputHierarchy[0]; 
     connectAttr instancerNode1.outPoints instancer1.inputPoints; 
 }
