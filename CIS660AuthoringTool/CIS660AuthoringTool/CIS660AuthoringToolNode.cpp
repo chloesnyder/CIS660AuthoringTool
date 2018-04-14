@@ -126,8 +126,8 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
 
     
     MStatus returnStatus;
- //   if ((plug == outputMesh) || (plug == outPoints))
-    if(plug == outPoints)
+    if ((plug == outputMesh) || (plug == outPoints))
+  //  if(plug == outPoints)
         {
         //get time
         MDataHandle timeData = data.inputValue(time, &returnStatus);
@@ -171,7 +171,7 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
       
         // Mesh output
         //get output object
-      /*  MDataHandle outputHandle = data.outputValue(outputMesh, &returnStatus);
+        MDataHandle outputHandle = data.outputValue(outputMesh, &returnStatus);
         McheckErr(returnStatus, "ERROR getting geometry data handle\n");
         MFnMeshData dataCreator;
         MObject newOutputData = dataCreator.create(&returnStatus);
@@ -180,42 +180,41 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
         createMesh(timeVal, widthVal, heightVal, sizeVal, minDepthVal, maxDepthVal, heightPathVal, newOutputData, returnStatus);
         McheckErr(returnStatus, "ERROR creating mesh");
         outputHandle.set(newOutputData);
-        data.setClean(outputMesh);*/
-
-    /*    MDataHandle outputPointsHandle = data.outputValue(outPoints, &returnStatus);
-        McheckErr(returnStatus, "ERROR getting out points data handle\n");
-        MFnArrayAttrsData pointDataCreator;
-        MObject newOutPointData = pointDataCreator.create(&returnStatus);
-        McheckErr(returnStatus, "ERROR creating newOutPointData");*/
-        //random point distribution
-      //  createInstancesOfObject(timeVal, widthVal, heightVal, sizeVal, minDepthVal, maxDepthVal, inNumPointsVal, plug, data, returnStatus);
-        //McheckErr(returnStatus, "ERROR creating outpoints");
-        //outputPointsHandle.set(newOutPointData);
-        //data.setClean(outPoints);
+        data.setClean(plug);
 
         MDataHandle pointsData = data.outputValue(outPoints, &returnStatus);
+        McheckErr(returnStatus, "ERROR getting out points data handle\n");
         MFnArrayAttrsData pointsAAD;
         MObject pointsObject = pointsAAD.create();
         MVectorArray positionArray = pointsAAD.vectorArray("position");
+        MVectorArray rotationArray = pointsAAD.vectorArray("rotation");
+        MVectorArray scaleArray = pointsAAD.vectorArray("scale");
         MDoubleArray idArray = pointsAAD.doubleArray("id");
+
+
         // loop to fill the arrays
         for (int i = 0; i < inNumPointsVal; i++)
             {
             // randomly generate an x coord and z coord within [0, width] and [0, height], then remap
             // look up the height in the image for y coord
-            int rx = rand() % widthVal;
-            int rz = rand() % heightVal;
+            int lowest = -sizeVal / 2.0;
+            int highest = -lowest;
+            int range = (highest - lowest) + 1;
+            int rx = lowest + int(range*rand() / (RAND_MAX + 1.0));
+            int rz = lowest + int(range*rand() / (RAND_MAX + 1.0));
             double remapX = remap(rx, (-sizeVal / 2.0), 0.0, (sizeVal / 2.0), 255.0);
             double remapZ = remap(rz, (-sizeVal / 2.0), 0.0, (sizeVal / 2.0), 255.0);
             double y = lookUpHeight(remapX, remapZ);
 
-            positionArray.append(MVector(floor(rx), y, floor(rz)));
+            positionArray.append(MVector(floor(rx), (y + .5f), floor(rz)));
+            rotationArray.append(MVector(20, 20, 20));
+            scaleArray.append(MVector(.1, .1, .5));
             idArray.append(i);
             }
 
         pointsData.setMObject(pointsObject);
+        McheckErr(returnStatus, "ERROR creating outpoints");
         data.setClean(plug);
-       // return pointsObject;
      
         }
 
@@ -224,55 +223,55 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
     return MS::kSuccess;
 }
 
-MObject CIS660AuthoringToolNode::createInstancesOfObject(const MTime& time, const int& width, const int& height, const double& s,
-                                const double& min_depth, const double& max_depth, const int& in_num_points, const MPlug& plug, MDataBlock& data, MStatus& stat)
-{
-    
-    // Fix what's happening with pointsData https://github.com/chloesnyder/CIS660HW3/blob/master/randomNode.py
-    //data.outputValue(newOutPointData);
-
-  /*  MDataHandle outputPointsHandle = data.outputValue(outPoints, &stat);
-  //  McheckErr(returnStatus, "ERROR getting out points data handle\n");
-    MFnArrayAttrsData pointDataCreator;
-    MObject newOutPointData = pointDataCreator.create(&stat);
-  //  McheckErr(returnStatus, "ERROR creating newOutPointData");
-
-    MFnArrayAttrsData pointsAAD;
-    MObject pointsObject = pointsAAD.create();
-    MVectorArray positionArray = pointsAAD.vectorArray("position");
-    MDoubleArray idArray = pointsAAD.doubleArray("id");
-    */
-
-    MDataHandle pointsData = data.outputValue(outPoints, &stat);
-    MFnArrayAttrsData pointsAAD;
-    MObject pointsObject = pointsAAD.create();
-    MVectorArray positionArray = pointsAAD.vectorArray("position");
-    MDoubleArray idArray = pointsAAD.doubleArray("id");
-    // loop to fill the arrays
-    for (int i = 0; i < in_num_points; i++)
-    {
-        // randomly generate an x coord and z coord within [0, width] and [0, height], then remap
-        // look up the height in the image for y coord
-        int rx = rand() % width;
-        int rz = rand() % height;
-        double remapX = remap(rx, (-s / 2.0), 0.0, (s / 2.0), 255.0);
-        double remapZ = remap(rz, (-s / 2.0), 0.0, (s / 2.0), 255.0);
-        double y = lookUpHeight(remapX, remapZ);
-
-        positionArray.append(MVector(floor(rx), y, floor(rz)));
-        idArray.append(i);
-    }
-
-    pointsData.setMObject(pointsObject);
-    data.setClean(plug);
-    return pointsObject;
-
-  //  McheckErr(returnStatus, "ERROR creating outpoints");
- //   outputPointsHandle.set(newOutPointData);
-  //  data.setClean(outPoints);
-
-   // return newOutPointData;
-}
+//MObject CIS660AuthoringToolNode::createInstancesOfObject(const MTime& time, const int& width, const int& height, const double& s,
+//                                const double& min_depth, const double& max_depth, const int& in_num_points, const MPlug& plug, MDataBlock& data, MStatus& stat)
+//{
+//    
+//    // Fix what's happening with pointsData https://github.com/chloesnyder/CIS660HW3/blob/master/randomNode.py
+//    //data.outputValue(newOutPointData);
+//
+//  /*  MDataHandle outputPointsHandle = data.outputValue(outPoints, &stat);
+//  //  McheckErr(returnStatus, "ERROR getting out points data handle\n");
+//    MFnArrayAttrsData pointDataCreator;
+//    MObject newOutPointData = pointDataCreator.create(&stat);
+//  //  McheckErr(returnStatus, "ERROR creating newOutPointData");
+//
+//    MFnArrayAttrsData pointsAAD;
+//    MObject pointsObject = pointsAAD.create();
+//    MVectorArray positionArray = pointsAAD.vectorArray("position");
+//    MDoubleArray idArray = pointsAAD.doubleArray("id");
+//    */
+//
+//    MDataHandle pointsData = data.outputValue(outPoints, &stat);
+//    MFnArrayAttrsData pointsAAD;
+//    MObject pointsObject = pointsAAD.create();
+//    MVectorArray positionArray = pointsAAD.vectorArray("position");
+//    MDoubleArray idArray = pointsAAD.doubleArray("id");
+//    // loop to fill the arrays
+//    for (int i = 0; i < in_num_points; i++)
+//    {
+//        // randomly generate an x coord and z coord within [0, width] and [0, height], then remap
+//        // look up the height in the image for y coord
+//        int rx = rand() % width;
+//        int rz = rand() % height;
+//        double remapX = remap(rx, (-s / 2.0), 0.0, (s / 2.0), 255.0);
+//        double remapZ = remap(rz, (-s / 2.0), 0.0, (s / 2.0), 255.0);
+//        double y = lookUpHeight(remapX, remapZ);
+//
+//        positionArray.append(MVector(floor(rx), y, floor(rz)));
+//        idArray.append(i);
+//    }
+//
+//    pointsData.setMObject(pointsObject);
+//    data.setClean(plug);
+//    return pointsObject;
+//
+//  //  McheckErr(returnStatus, "ERROR creating outpoints");
+// //   outputPointsHandle.set(newOutPointData);
+//  //  data.setClean(outPoints);
+//
+//   // return newOutPointData;
+//}
 
 void CIS660AuthoringToolNode::FILL(double x, double  y, double z)
 {
@@ -314,6 +313,8 @@ void CIS660AuthoringToolNode::createPlane(int width, int height, double s)
             double y = lookUpHeight(remapX, remapZ);
             FILL(x, y, z);
             num_verts++;
+
+            // associate the vertex with an id so that we can look up the normal in the array later
             }
         }
 
@@ -341,99 +342,6 @@ void CIS660AuthoringToolNode::createPlane(int width, int height, double s)
     num_edges = num_face_connects / 2;
 }
 
-
-/*MDagPath  CIS660AuthoringToolNode::createCube()
-{
-    MStatus stat;
-
-    int num_verts_cube = 8;
-    int num_faces_cube = 6;
-    int num_edges_cube;
-    int edges_per_face_cube = 4;
-    int num_face_connects_cube;
-    int* p_gons_cube = cube_gons;
-   
-    MFnMesh fnPoly_cube;
-    MFloatPointArray iarr_cube;
-    MFloatPointArray pa_cube;
-    MIntArray faceCounts_cube;
-    MIntArray faceConnects_cube;
-
-    MObject newTransform_cube;
-    MDGModifier dgModifier_cube;
-
-
-    // First, create the points:
-    double a = sqrt(1.0 / 3.0);
-
-    MFloatPoint pnt1(a, a, a);
-    MFloatPoint pnt2(a, -a, a);
-    MFloatPoint pnt3(-a, -a, a);
-    MFloatPoint pnt4(-a, a, a);
-    MFloatPoint pnt5(a, a, -a);
-    MFloatPoint pnt6(a, -a, -a);
-    MFloatPoint pnt7(-a, -a, -a);
-    MFloatPoint pnt8(-a, a, -a);
-    iarr_cube.append(pnt1);
-    iarr_cube.append(pnt2);
-    iarr_cube.append(pnt3);
-    iarr_cube.append(pnt4);
-    iarr_cube.append(pnt5);
-    iarr_cube.append(pnt6);
-    iarr_cube.append(pnt7);
-    iarr_cube.append(pnt8);
-
-    int i;
-    for (i = 0; i<num_verts_cube; i++)
-        pa_cube.append(iarr_cube[i]);
-
-    // If we are using polygon data then set up the face connect array
-    // here. Otherwise, the create function will do it.
-    //
-    if (NULL != p_gons_cube) {
-        num_face_connects_cube = num_faces_cube * edges_per_face_cube;
-        num_edges_cube = num_face_connects_cube / 2;
-
-        for (i = 0; i<num_faces_cube; i++)
-            faceCounts_cube.append(edges_per_face_cube);
-
-        for (i = 0; i<(num_faces_cube*edges_per_face_cube); i++)
-            faceConnects_cube.append(p_gons_cube[i] - 1);
-        }
-
-    // Call the poly creation method to create the polygon
-    newTransform_cube = fnPoly_cube.create(num_verts_cube, num_faces_cube, pa_cube,
-                                 faceCounts_cube, faceConnects_cube, MObject::kNullObj, &stat);
-    //McheckErr(stat,"Could not create MFnMesh");
-
-    // Primitive is created so tell shape it has changed
-    //
-    fnPoly_cube.updateSurface();
-
-    dgModifier_cube.renameNode(newTransform_cube, "pPrimitive1");
-    dgModifier_cube.doIt();
-
-    //
-    // Put the polygon into a shading group
-    MString cmd("sets -e -fe initialShadingGroup ");
-    cmd += fnPoly_cube.name();
-    dgModifier_cube.commandToExecute(cmd);
-
-    MFnDagNode fnDagNode_cube(newTransform_cube, &stat);
-    if (MS::kSuccess == stat)
-        {
-        cmd = "select ";
-        cmd += fnDagNode_cube.name();
-        dgModifier_cube.commandToExecute(cmd);
-        }
-
-    dgModifier_cube.doIt();
-
-    MDagPath dagPath_cube = fnDagNode_cube.dagPath();
-
-    
-
-}*/
 
 
 double CIS660AuthoringToolNode::remap(double value, double low1, double low2, double high1, double high2)
@@ -505,7 +413,6 @@ MObject CIS660AuthoringToolNode::createMesh(const MTime& time, const int& width,
     }
 
     MObject newMesh = fnPoly.create(num_verts, num_faces, pa, faceCounts, faceConnects, outData, &stat);
-
     return newMesh;
 
 }

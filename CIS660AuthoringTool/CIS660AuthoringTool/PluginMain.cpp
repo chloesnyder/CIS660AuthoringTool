@@ -21,7 +21,7 @@
 
 #include "CIS660AuthoringToolCmd.h"
 #include "CIS660AuthoringToolNode.h"
-#include "Instancer.h"
+
 
 
 MStatus initializePlugin(MObject obj)
@@ -45,14 +45,6 @@ MStatus initializePlugin(MObject obj)
         MGlobal::displayInfo(buffer2);
         CHECK_MSTATUS_AND_RETURN_IT(status);
     }
-
-    status = plugin.registerNode("instancerNode", instancerNode::id, instancerNode::creator, instancerNode::initialize);
-    if (!status) {
-        char buffer3[2048];
-        sprintf_s(buffer3, 2048, "error");
-        MGlobal::displayInfo(buffer3);
-        CHECK_MSTATUS_AND_RETURN_IT(status);
-        }
 
     char buffer[2048];
     std::string s = plugin.loadPath().asChar();
@@ -78,10 +70,5 @@ MStatus uninitializePlugin(MObject obj)
         CHECK_MSTATUS_AND_RETURN_IT(status);
     }
 
-    status = plugin.deregisterNode(instancerNode::id);
-    if (!status) {
-        CHECK_MSTATUS_AND_RETURN_IT(status);
-        }
-    
     return status;
 }
