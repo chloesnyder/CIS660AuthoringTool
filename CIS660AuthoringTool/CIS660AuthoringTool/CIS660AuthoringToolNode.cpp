@@ -127,8 +127,8 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
     
     MStatus returnStatus;
     if ((plug == outputMesh) || (plug == outPoints))
-  //  if(plug == outPoints)
         {
+
         //get time
         MDataHandle timeData = data.inputValue(time, &returnStatus);
         McheckErr(returnStatus, "Error getting time data handle\n");
@@ -191,7 +191,6 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
         MVectorArray scaleArray = pointsAAD.vectorArray("scale");
         MDoubleArray idArray = pointsAAD.doubleArray("id");
 
-
         // loop to fill the arrays
         for (int i = 0; i < inNumPointsVal; i++)
             {
@@ -205,10 +204,19 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
             double remapX = remap(rx, (-sizeVal / 2.0), 0.0, (sizeVal / 2.0), 255.0);
             double remapZ = remap(rz, (-sizeVal / 2.0), 0.0, (sizeVal / 2.0), 255.0);
             double y = lookUpHeight(remapX, remapZ);
+         
+            // Trees that are taller rotate less
+            double yScale = ((double) rand() / (RAND_MAX));
+            double maxX = yScale * 10;
+            double minX = -maxX;
+            double maxZ = yScale * 10;
+            double minZ = -maxZ;
+            double xRot = (maxX - minX) * ((double) rand() / (double) RAND_MAX) + minX;
+            double zRot = (maxZ - minZ) * ( (double)rand() / (double)RAND_MAX ) + minZ;
 
-            positionArray.append(MVector(floor(rx), (y + .5f), floor(rz)));
-            rotationArray.append(MVector(20, 20, 20));
-            scaleArray.append(MVector(.1, .1, .5));
+            positionArray.append(MVector(rx + ((double) rand() / (RAND_MAX)) - 1.0, (y + .5f), rz + ((double) rand() / (RAND_MAX)) - 1.0));
+            rotationArray.append(MVector(xRot, 0, zRot)); // max rotation in either direction should be 5 degrees
+            scaleArray.append(MVector(.01, abs(yScale - .5), .01));
             idArray.append(i);
             }
 
@@ -313,8 +321,6 @@ void CIS660AuthoringToolNode::createPlane(int width, int height, double s)
             double y = lookUpHeight(remapX, remapZ);
             FILL(x, y, z);
             num_verts++;
-
-            // associate the vertex with an id so that we can look up the normal in the array later
             }
         }
 
@@ -382,7 +388,7 @@ MObject CIS660AuthoringToolNode::createMesh(const MTime& time, const int& width,
 
     // create a poly function set
     //
-    MFnMesh fnPoly;
+    //MFnMesh fnPoly;
 
     iarr.clear();
     faceCounts.clear();
@@ -413,6 +419,7 @@ MObject CIS660AuthoringToolNode::createMesh(const MTime& time, const int& width,
     }
 
     MObject newMesh = fnPoly.create(num_verts, num_faces, pa, faceCounts, faceConnects, outData, &stat);
+
     return newMesh;
 
 }

@@ -21,9 +21,11 @@
 #include <maya/MIOStream.h>
 
 #include <maya/MFnArrayAttrsData.h>
-
+#include <map>
+#include <utility>
 #include <sstream>
 #include <maya/MGlobal.h>
+#include <random>
 
 
 
@@ -71,6 +73,7 @@ class CIS660AuthoringToolNode : public MPxNode
         MIntArray faceCounts;
         MIntArray faceConnects;
 
+        MFnMesh fnPoly;
         CImg<float> heightMap;
 
         void FILL(double x, double y, double z);

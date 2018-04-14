@@ -1,33 +1,4 @@
-global int $valHeight = 128;
-global int $valWidth = 128;
-global float $valSize= 2;
-global float $valMinDepth = 0;
-global float $valMaxDepth = 50;
 
-global string $heightMapPath = 0;
-
-
-global proc fileDialog()
-{
-	global string $heightMapPath;
-
-	$heightMapPath = `fileDialog -dm "*.bmp"`;
-	$file = `fopen $heightMapPath "r"`;
-    scrollField -edit -text $heightMapPath heightMapScroll;
-    fclose $file;
-}
-
-
-global proc executeCommand()
-{
-	global string $heightMapPath;
-	$valHeight = `intSliderGrp -query -value width`;
-	$valWidth = `intSliderGrp -query -value height`;
-	$valSize = `floatSliderGrp -query -value size`;
-	$valMinDepth = `floatSliderGrp -query -value mindepth`;
-	$valMaxDepth = `floatSliderGrp -query -value maxdepth`;
-	CIS660AuthoringToolCmd -w $valWidth -h $valHeight -s $valSize -hp $heightMapPath -mnd $valMinDepth -mxd $valMaxDepth;
-}
 
 global proc createNode() {
 	polyCube;
@@ -40,25 +11,11 @@ global proc createNode() {
 	connectAttr CIS660AuthoringToolNode1.outputMesh CIS660AuthoringToolShape1.inMesh;
 	connectAttr pCube1.matrix instancer1.inputHierarchy[0];
 	connectAttr CIS660AuthoringToolNode1.outPoints instancer1.inputPoints;
+	//delete pCube1;
 
-}
 
-global proc windowFunction()
-{
-    window;
-		columnLayout;
-		scrollField -wordWrap on -text "HeightMap" heightMapScroll;
-		button -command fileDialog -label "Browse for heightmap file";
-		intSliderGrp -minValue 1 -maxValue 256 -step 1 -label "Height" -field true height;
-		intSliderGrp -minValue 1 -maxValue 256 -step 1 -label "Width" -field true width;
-		floatSliderGrp -minValue 1 -maxValue 256 -label "Size" -field true size;
-		floatSliderGrp -minValue -255 -maxValue 0 -label "Min Depth" -field true mindepth;
-		floatSliderGrp -minValue 0 -maxValue 255 -label "Max Depth" -field true maxdepth;
-		button -command "executeCommand();" -label "Create Plane";
-	showWindow;
 }
 
 
 menu -parent MayaWindow -label "CIS660AuthoringTool Command" -tearOff true menu1;
-	menuItem -label "CIS660AuthoringTool Command" -command "windowFunction();";
 	menuItem -label "Create node" -command "createNode();";
