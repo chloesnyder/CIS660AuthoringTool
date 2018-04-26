@@ -400,9 +400,85 @@ void ImageDataManipulator::brushAdd(int x, int y, int r, float amt)
     }
 }
 
+float ImageDataManipulator::calculateCurveDataForPoint(int x, int y)
+{
+    uint64_t h_idx = 0;
+    uint64_t hv1_idx = 0;
+    uint64_t hv2_idx = 0;
+    uint64_t hh1_idx = 0;
+    uint64_t hh2_idx = 0;
+    uint64_t px = (uint64_t) x;
+    uint64_t py = (uint64_t) y;
+    uint64_t d = 3;
+
+    ZC(px, py, &h_idx);
+    ZC(px, py - d, &hv1_idx);
+    ZC(px, py + d, &hv2_idx);
+    ZC(px - d, py, &hh1_idx);
+    ZC(px + d, py, &hh2_idx);
+
+    float h = heightData[h_idx];
+    float hv1 = heightData[hv1_idx];
+    float hv2 = heightData[hv2_idx];
+    float hh1 = heightData[hh1_idx];
+    float hh2 = heightData[hh2_idx];
+    float vcurviness = 0;
+    float hcurviness = 0;
+
+    if(hv1 < hv2)
+    {
+         vcurviness = (h - hv2) - (hv1 - h);
+    } else {
+         vcurviness = (h - hv1) - (hv2 - h);
+    }
+
+    if(hh1 < hh2)
+    {
+        hcurviness = (h - hh2) - (hh1 - h);
+    } else {
+        hcurviness = (h - hh1) - (hh2 - h);
+    }
+
+    float curveData = (vcurviness + hcurviness)/(2.0);
+    return curveData;
+
+}
+
 void ImageDataManipulator::brushPolish(int x, int y, int r, float amt)
 {
+    float kr = std::max((float) r - 1.0, 1.0);
+    uint64_t centerIdx = 0;
+    ZC((uint64_t) x, (uint64_t) y, &centerIdx);
+    float centerVal = heightData[centerIdx];
+    vec3 centerNor = normalData[centerIdx];
 
+
+    for (int i = 1 - r; i < r; i++) {
+        for (int j = 1 - r; j < r; j++) {
+            int px = pxClamp(x + j);
+            int py = pxClamp(y + i);
+            uint64_t idx = 0;
+            ZC((uint64_t) px,(uint64_t)  py, &idx);
+            float h = heightData[idx];
+
+            // cone falloff
+            float dist = std::sqrt((float)(j * j + i * i));
+
+            dist = saturate(1.0 - dist / kr);
+            // smooth falloff
+            dist = smoothstep(dist);
+
+            //calculate curvature on the spot:
+            float c = calculateCurveDataForPoint(px, py);
+            c = 1.0 - clamp(-c, 0.0, 1.0);
+
+            float z0 = centerVal * centerNor.z / heightIntensity;
+            float z1 = (centerNor.x * px - centerNor.y * py + z0) / centerNor.z * heightIntensity;
+            h = mix(h, clamp(z1, 0.0, 1.0), c * dist * amt);
+            heightData[idx] = h;
+
+        }
+    }
 }
 
 void ImageDataManipulator::brushFlatten(int x, int y, int r, float amt)

@@ -202,6 +202,7 @@ private:
     int width = -1;
     int height = -1;
     int size = -1; // w * h
+    float heightIntensity = 4.0;
 
     std::vector<float> heightData;
     std::vector<vec3> normalData;
@@ -254,6 +255,7 @@ public:
 
     void brushPolish(int x, int y, int r, float amt);
     void brushFlatten(int x, int y, int r, float amt);
+    float calculateCurveDataForPoint(int x, int y);
 
     float bilinear(std::vector<float> &map, vec2 pos);
     vec2 bilinear(std::vector<vec2> &map, vec2 pos);
