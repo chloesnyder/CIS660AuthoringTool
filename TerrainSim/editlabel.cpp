@@ -25,7 +25,15 @@ void EditLabel::mouseEdit(float x, float y)
 {
     if (imgRef) {
         if (mode == EditMode::terrain) {
-            EditLabel::dataHandle.brushAdd(x, y, brushRadius, (modAlt ? -0.01 : 0.01));
+            if(modAlt && modShift)
+            {
+                EditLabel::dataHandle.brushPolish(x, y, brushRadius, .3);
+            } else if (modShift) {
+                EditLabel::dataHandle.brushFlatten(x, y, brushRadius, .3); // may need to change amt
+            } else {
+                // if shift not pressed, then additive or subtractive based on modAlt
+                EditLabel::dataHandle.brushAdd(x, y, brushRadius, (modAlt ? -0.01 : 0.01));
+            }
 
 
         } else if (mode == EditMode::foliage) {

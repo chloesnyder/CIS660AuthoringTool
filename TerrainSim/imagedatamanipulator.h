@@ -225,6 +225,10 @@ private:
     int pxClamp (int p) { return std::max(0, std::min(width - 1, p)); }
     float saturate(float f) {return std::max(0.0f, std::min(1.0f, f)); }
     float smoothstep(float f) { return f * f * (3.0f - 2.0f * f);}
+    float mix(float a, float b, float t) {
+        t = std::max(0.0f, std::min(1.0f, t));
+        return t * b + (1.0 - t) * a;
+    }
 
     void bilinearRepair(vec2 p);
     void radiusRepair(vec2 p, int r);
@@ -247,6 +251,9 @@ public:
 
     void brushAdd(int x, int y, int r, float amt);
     void refreshRegion(int x, int y, int r);
+
+    void brushPolish(int x, int y, int r, float amt);
+    void brushFlatten(int x, int y, int r, float amt);
 
     float bilinear(std::vector<float> &map, vec2 pos);
     vec2 bilinear(std::vector<vec2> &map, vec2 pos);

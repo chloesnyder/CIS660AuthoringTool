@@ -400,6 +400,38 @@ void ImageDataManipulator::brushAdd(int x, int y, int r, float amt)
     }
 }
 
+void ImageDataManipulator::brushPolish(int x, int y, int r, float amt)
+{
+
+}
+
+void ImageDataManipulator::brushFlatten(int x, int y, int r, float amt)
+{
+    float kr = std::max((float) r - 1.0, 1.0);
+    for (int i = 1 - r; i < r; i++) {
+        for (int j = 1 - r; j < r; j++) {
+            int px = pxClamp(x + j);
+            int py = pxClamp(y + i);
+            uint64_t idx = 0;
+            ZC((uint64_t) px,(uint64_t)  py, &idx);
+            float h = heightData[idx];
+
+            // cone falloff
+            float dist = std::sqrt((float)(j * j + i * i));
+
+            dist = saturate(1.0 - dist / kr);
+            // smooth falloff
+            dist = smoothstep(dist);
+
+           uint64_t centerIdx = 0;
+           ZC((uint64_t) x, (uint64_t) y, &centerIdx);
+           float centerVal = heightData[centerIdx];
+           h = mix(h, centerVal, dist * amt);
+           heightData[idx] = h;
+        }
+    }
+}
+
 void ImageDataManipulator::refreshRegion(int x, int y, int r)
 {
     for (int i = 1 - r; i < r; i++) {
