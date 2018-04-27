@@ -16,6 +16,7 @@ class QLabel;
 class QMenu;
 class QScrollArea;
 class QScrollBar;
+class QSlider;
 
 class ImageViewer : public QMainWindow
 {
@@ -56,6 +57,8 @@ private:
     EditLabel *foliageLabel;
     QScrollArea *scrollArea;
     double scaleFactor;
+
+    QSlider *intensitySlider;
 
 #ifndef QT_NO_PRINTER
     QPrinter printer;

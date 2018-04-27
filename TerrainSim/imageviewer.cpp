@@ -35,10 +35,23 @@ ImageViewer::ImageViewer()
     layout = new QHBoxLayout(central);
     layout->addWidget(imageTabs);
 
+    intensitySlider = new QSlider(Qt::Vertical, central);
+    intensitySlider->setFocusPolicy(Qt::StrongFocus);
+    intensitySlider->setTickPosition(QSlider::TicksBothSides);
+    intensitySlider->setTickInterval(10); // min value = .01, max value = .1
+    intensitySlider->setSingleStep(1);
+    intensitySlider->adjustSize();
+
+
+    layout->addWidget(intensitySlider);
+
+
     scrollArea->setBackgroundRole(QPalette::Dark);
     scrollArea->setWidget(central);
     scrollArea->setVisible(false);
     setCentralWidget(scrollArea);
+
+
 
     createActions();
 
