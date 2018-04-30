@@ -11,7 +11,6 @@ global proc createNode() {
 	connectAttr CIS660AuthoringToolNode1.outputMesh CIS660AuthoringToolShape1.inMesh;
 	connectAttr pCube1.matrix instancer1.inputHierarchy[0];
 	connectAttr CIS660AuthoringToolNode1.outPoints instancer1.inputPoints;
-	//delete pCube1;
 
 
 }
