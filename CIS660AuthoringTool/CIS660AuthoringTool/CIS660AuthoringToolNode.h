@@ -52,6 +52,7 @@ class CIS660AuthoringToolNode : public MPxNode
         static MObject time;
         static MObject width;
         static MObject height;
+        static MObject treeHeight;
         static MObject mindepth;
         static MObject maxdepth;
         static MObject hpath;

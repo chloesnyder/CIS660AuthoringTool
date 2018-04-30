@@ -8,6 +8,7 @@ MTypeId CIS660AuthoringToolNode::id(0x8000);
 MObject CIS660AuthoringToolNode::time;
 MObject CIS660AuthoringToolNode::width;
 MObject CIS660AuthoringToolNode::height;
+MObject CIS660AuthoringToolNode::treeHeight;
 MObject CIS660AuthoringToolNode::mindepth;
 MObject CIS660AuthoringToolNode::maxdepth;
 MObject CIS660AuthoringToolNode::fpath;
@@ -37,13 +38,22 @@ MStatus CIS660AuthoringToolNode::initialize()
     CIS660AuthoringToolNode::height = numAttr.MFnNumericAttribute::create("height", "h", MFnNumericData::kLong, 0, &returnStatus);
     McheckErr(returnStatus, "ERROR creating CIS660AuthoringToolNode height attribute\n");
 
+    CIS660AuthoringToolNode::treeHeight = numAttr.MFnNumericAttribute::create("tree_height", "th", MFnNumericData::kDouble, 1.0, &returnStatus);
+    numAttr.setMin(0.0);
+    numAttr.setMax(10.0);
+    McheckErr(returnStatus, "ERROR creating CIS660AuthoringToolNode tree_height attribute\n");
+
     CIS660AuthoringToolNode::size = numAttr.MFnNumericAttribute::create("size", "s", MFnNumericData::kDouble, 0, &returnStatus);
     McheckErr(returnStatus, "ERROR creating CIS660AuthoringToolNode size attribute\n");
 
     CIS660AuthoringToolNode::mindepth = numAttr.MFnNumericAttribute::create("mindepth", "mnd", MFnNumericData::kDouble, 0, &returnStatus);
+    numAttr.setMin(-15.0);
+    numAttr.setMax(0.0);
     McheckErr(returnStatus, "ERROR creating CIS660AuthoringToolNode min depth attribute\n");
 
     CIS660AuthoringToolNode::maxdepth = numAttr.MFnNumericAttribute::create("maxdepth", "mxd", MFnNumericData::kDouble, 0, &returnStatus);
+    numAttr.setMin(0.0);
+    numAttr.setMax(15.0);
     McheckErr(returnStatus, "ERROR creating CIS660AuthoringToolNode max depth attribute\n");
 
     CIS660AuthoringToolNode::hpath = typedAttr.MFnTypedAttribute::create("hpath", "hp", MFnData::kString, &returnStatus);
@@ -53,6 +63,8 @@ MStatus CIS660AuthoringToolNode::initialize()
     McheckErr(returnStatus, "ERROR creating CIS660AuthoringToolNode foliage path attribute\n");
 
     CIS660AuthoringToolNode::inNumPoints = numAttr.MFnNumericAttribute::create("inputPoints", "ip", MFnNumericData::kLong, 0, &returnStatus);
+    numAttr.setMin(0.0);
+    numAttr.setMax(10000.0);
     McheckErr(returnStatus, "ERROR creating CIS660AuthoringToolNode inputPoints attribute\n");
 
     CIS660AuthoringToolNode::outputMesh = typedAttr.create("outputMesh", "out", MFnData::kMesh, &returnStatus);
@@ -73,6 +85,8 @@ MStatus CIS660AuthoringToolNode::initialize()
     McheckErr(returnStatus, "ERROR adding width attribute\n");
     returnStatus = addAttribute(CIS660AuthoringToolNode::height);
     McheckErr(returnStatus, "ERROR adding height attribute\n");
+    returnStatus = addAttribute(CIS660AuthoringToolNode::treeHeight);
+    McheckErr(returnStatus, "ERROR adding tree height attribute\n");
     returnStatus = addAttribute(CIS660AuthoringToolNode::size);
     McheckErr(returnStatus, "ERROR adding size attribute\n");
     returnStatus = addAttribute(CIS660AuthoringToolNode::mindepth);
@@ -95,6 +109,8 @@ MStatus CIS660AuthoringToolNode::initialize()
     McheckErr(returnStatus, "ERROR in attributeAffects (width affecting outputMesh)\n");
     returnStatus = attributeAffects(CIS660AuthoringToolNode::height, CIS660AuthoringToolNode::outputMesh);
     McheckErr(returnStatus, "ERROR in attributeAffects (height affecting outputMesh)\n");
+    returnStatus = attributeAffects(CIS660AuthoringToolNode::treeHeight, CIS660AuthoringToolNode::outputMesh);
+    McheckErr(returnStatus, "ERROR in attributeAffects (tree height affecting outputMesh)\n");
     returnStatus = attributeAffects(CIS660AuthoringToolNode::size, CIS660AuthoringToolNode::outputMesh);
     McheckErr(returnStatus, "ERROR in attributeAffects (size affecting outputMesh)\n");
     returnStatus = attributeAffects(CIS660AuthoringToolNode::mindepth, CIS660AuthoringToolNode::outputMesh);
@@ -117,6 +133,8 @@ MStatus CIS660AuthoringToolNode::initialize()
     McheckErr(returnStatus, "ERROR in attributeAffects (width affecting outputMesh)\n");
     returnStatus = attributeAffects(CIS660AuthoringToolNode::height, CIS660AuthoringToolNode::outPoints);
     McheckErr(returnStatus, "ERROR in attributeAffects (height affecting outPoints)\n");
+    returnStatus = attributeAffects(CIS660AuthoringToolNode::treeHeight, CIS660AuthoringToolNode::outPoints);
+    McheckErr(returnStatus, "ERROR in attributeAffects (tree height affecting outPoints)\n");
     returnStatus = attributeAffects(CIS660AuthoringToolNode::size, CIS660AuthoringToolNode::outPoints);
     McheckErr(returnStatus, "ERROR in attributeAffects (size affecting outPoints)\n");
     returnStatus = attributeAffects(CIS660AuthoringToolNode::mindepth, CIS660AuthoringToolNode::outPoints);
@@ -154,6 +172,11 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
         McheckErr(returnStatus, "Error getting height data handle\n");
         int heightVal = heightData.asInt();
 
+        //get tree hight
+        MDataHandle treeHeightData = data.inputValue(treeHeight, &returnStatus);
+        McheckErr(returnStatus, "Error getting tree height data handle\n");
+        double treeHeightVal = treeHeightData.asDouble();
+        
         //get size
         MDataHandle sizeData = data.inputValue(size, &returnStatus);
         McheckErr(returnStatus, "Error getting size  data handle\n");
@@ -217,8 +240,48 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
 
         // TODO: Change how you are placing trees.
         // Go through each pixel in foliage map
-        // Look up r value, multiple by inNumPointsVal, place that number of trees?
-        // Look up g value, multiply by user heigh input, scale appropriately
+        // Look up r value, multiply by inNumPointsVal, place that number of trees?
+        // Look up g value, multiply by treeHeight input, scale appropriately
+
+        /*pseudo code:
+        double x, z;
+        for (z = -size / 2.0; z <= size / 2.0; z += hSize)
+        {
+             for (x = -size / 2.0; x <= size / 2.0; x += wSize)
+             {
+                // remap x and z from range [-size/2.0, size/2.0] to range [0,256]             
+                double remapX = remap(x, (-size / 2.0), 0.0, (size / 2.0), 255.0);
+                double remapZ = remap(z, (-size / 2.0), 0.0, (size / 2.0), 255.0);
+                double yScale =  treeHeightVal * lookUpFoliageGChannel(remapX, remapZ);
+                int numTreesInCell = inNumPointsVal * lookUpFoliageRChannel(remapX, remapZ);
+                double y = lookUpHeight(remapX, remapZ);
+
+                double maxX = yScale * 10;
+                double minX = -maxX;
+                double maxZ = yScale * 10;
+                double minZ = -maxZ;
+
+                for(int i = 0; i < numTreesInCell; i++) {
+                    double xRot = (maxX - minX) * ((double) rand() / (double) RAND_MAX) + minX;
+                    double zRot = (maxZ - minZ) * ((double) rand() / (double) RAND_MAX) + minZ;
+
+                    int lowest = -sizeVal / 2.0; // TODO: What is the "size" of the cell? Use this to generate lowest/highest
+                                                 // values for the x and z offsets. It probably won't be "sizeVal/2.0", might be more 
+                                                 // like sizeVal/10. sizeVal is the overall size of the plane
+                    int highest = -lowest;
+                    int range = (highest - lowest) + 1;
+                    int xOffset = lowest + int(range*rand() / (RAND_MAX + 1.0));
+                    int zOffset = lowest + int(range*rand() / (RAND_MAX + 1.0));
+
+                    positionArray.append(MVector(x + xOffset, y, z + zOffset));
+                    rotationArray.append(MVector(xRot, 0, zRot)); // max rotation in either direction should be 5 degrees
+                    scaleArray.append(MVector(1.0, abs(yScale), 1.0));
+
+                    idArray.append(i);
+                }
+            }
+        }
+        */
 
         // loop to fill the arrays
         for (int i = 0; i < inNumPointsVal; i++)
@@ -235,7 +298,7 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
                 double y = lookUpHeight(remapX, remapZ);
          
                 // Trees that are taller rotate less
-                double yScale = ((double) rand() / (RAND_MAX)); // TODO: H variable set by node slider
+                double yScale = treeHeightVal * ((double) rand() / (RAND_MAX)); // TODO: replace with the treeHeight * lookUpFoliageGChannel stuff
                 double maxX = yScale * 10;
                 double minX = -maxX;
                 double maxZ = yScale * 10;
@@ -309,7 +372,7 @@ void CIS660AuthoringToolNode::createPlane(int width, int height, double s)
             FILL(x, y, z);
             num_verts++;
             }
-        }
+    }
 
     // create polys
     int v0, v1, v2, v3;
