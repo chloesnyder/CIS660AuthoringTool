@@ -206,7 +206,7 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
             double y = lookUpHeight(remapX, remapZ);
          
             // Trees that are taller rotate less
-            double yScale = ((double) rand() / (RAND_MAX));
+            double yScale = ((double) rand() / (RAND_MAX)); // TODO: H variable set by node slider
             double maxX = yScale * 10;
             double minX = -maxX;
             double maxZ = yScale * 10;
@@ -214,9 +214,17 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
             double xRot = (maxX - minX) * ((double) rand() / (double) RAND_MAX) + minX;
             double zRot = (maxZ - minZ) * ( (double)rand() / (double)RAND_MAX ) + minZ;
 
+    /*Cube
             positionArray.append(MVector(rx + ((double) rand() / (RAND_MAX)) - 1.0, (y + .5f), rz + ((double) rand() / (RAND_MAX)) - 1.0));
             rotationArray.append(MVector(xRot, 0, zRot)); // max rotation in either direction should be 5 degrees
-            scaleArray.append(MVector(.01, abs(yScale - .5), .01));
+            scaleArray.append(MVector(.50, abs(yScale - .5), .50));*/
+
+            // Object:
+            // TODO: What does y position have to be, given a yScale, such that the tree is placed at correct height on map?
+            positionArray.append(MVector(rx + ((double) rand() / (RAND_MAX)) - 1.0, y, rz + ((double) rand() / (RAND_MAX)) - 1.0));
+            rotationArray.append(MVector(xRot, 0, zRot)); // max rotation in either direction should be 5 degrees
+            scaleArray.append(MVector(1.0, abs(yScale), 1.0));
+
             idArray.append(i);
             }
 
@@ -230,56 +238,6 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
     
     return MS::kSuccess;
 }
-
-//MObject CIS660AuthoringToolNode::createInstancesOfObject(const MTime& time, const int& width, const int& height, const double& s,
-//                                const double& min_depth, const double& max_depth, const int& in_num_points, const MPlug& plug, MDataBlock& data, MStatus& stat)
-//{
-//    
-//    // Fix what's happening with pointsData https://github.com/chloesnyder/CIS660HW3/blob/master/randomNode.py
-//    //data.outputValue(newOutPointData);
-//
-//  /*  MDataHandle outputPointsHandle = data.outputValue(outPoints, &stat);
-//  //  McheckErr(returnStatus, "ERROR getting out points data handle\n");
-//    MFnArrayAttrsData pointDataCreator;
-//    MObject newOutPointData = pointDataCreator.create(&stat);
-//  //  McheckErr(returnStatus, "ERROR creating newOutPointData");
-//
-//    MFnArrayAttrsData pointsAAD;
-//    MObject pointsObject = pointsAAD.create();
-//    MVectorArray positionArray = pointsAAD.vectorArray("position");
-//    MDoubleArray idArray = pointsAAD.doubleArray("id");
-//    */
-//
-//    MDataHandle pointsData = data.outputValue(outPoints, &stat);
-//    MFnArrayAttrsData pointsAAD;
-//    MObject pointsObject = pointsAAD.create();
-//    MVectorArray positionArray = pointsAAD.vectorArray("position");
-//    MDoubleArray idArray = pointsAAD.doubleArray("id");
-//    // loop to fill the arrays
-//    for (int i = 0; i < in_num_points; i++)
-//    {
-//        // randomly generate an x coord and z coord within [0, width] and [0, height], then remap
-//        // look up the height in the image for y coord
-//        int rx = rand() % width;
-//        int rz = rand() % height;
-//        double remapX = remap(rx, (-s / 2.0), 0.0, (s / 2.0), 255.0);
-//        double remapZ = remap(rz, (-s / 2.0), 0.0, (s / 2.0), 255.0);
-//        double y = lookUpHeight(remapX, remapZ);
-//
-//        positionArray.append(MVector(floor(rx), y, floor(rz)));
-//        idArray.append(i);
-//    }
-//
-//    pointsData.setMObject(pointsObject);
-//    data.setClean(plug);
-//    return pointsObject;
-//
-//  //  McheckErr(returnStatus, "ERROR creating outpoints");
-// //   outputPointsHandle.set(newOutPointData);
-//  //  data.setClean(outPoints);
-//
-//   // return newOutPointData;
-//}
 
 void CIS660AuthoringToolNode::FILL(double x, double  y, double z)
 {

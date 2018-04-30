@@ -1,5 +1,6 @@
 
 
+/* Cube instance
 global proc createNode() {
 	polyCube;
 	instancer;
@@ -11,8 +12,21 @@ global proc createNode() {
 	connectAttr CIS660AuthoringToolNode1.outputMesh CIS660AuthoringToolShape1.inMesh;
 	connectAttr pCube1.matrix instancer1.inputHierarchy[0];
 	connectAttr CIS660AuthoringToolNode1.outPoints instancer1.inputPoints;
+}*/
 
+global proc createNode() {
+	string $obj[] = `ls -sl`;
+	$item = $obj[0];
 
+	instancer;
+	createNode transform -n CIS660AuthoringTool1;
+	createNode mesh -n CIS660AuthoringToolShape1 -p CIS660AuthoringTool1;
+	sets -add initialShadingGroup CIS660AuthoringToolShape1;
+	createNode CIS660AuthoringToolNode -n CIS660AuthoringToolNode1;
+	connectAttr time1.outTime CIS660AuthoringToolNode1.time;
+	connectAttr CIS660AuthoringToolNode1.outputMesh CIS660AuthoringToolShape1.inMesh;
+	connectAttr ($item+".matrix") instancer1.inputHierarchy[0];
+	connectAttr CIS660AuthoringToolNode1.outPoints instancer1.inputPoints;
 }
 
 
