@@ -1,6 +1,10 @@
 ﻿  CIS660AuthoringToolNode.cpp
-CIS660AuthoringToolNode.cpp(199): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-CIS660AuthoringToolNode.cpp(326): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-CIS660AuthoringToolNode.cpp(327): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(228): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(345): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(346): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(360): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(361): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(383): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(384): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
      Creating library Release\CIS660AuthoringTool.lib and object Release\CIS660AuthoringTool.exp
   CIS660AuthoringTool.vcxproj -> C:\Users\SIG\Documents\GitHub\CIS660AuthoringTool\CIS660AuthoringTool\CIS660AuthoringTool\Release\CIS660AuthoringTool.mll

@@ -55,6 +55,7 @@ class CIS660AuthoringToolNode : public MPxNode
         static MObject mindepth;
         static MObject maxdepth;
         static MObject hpath;
+        static MObject fpath;
         static MObject size;
         static MObject outputMesh;
 
@@ -75,10 +76,14 @@ class CIS660AuthoringToolNode : public MPxNode
 
         MFnMesh fnPoly;
         CImg<float> heightMap;
+        CImg<float> foliageMap;
 
         void FILL(double x, double y, double z);
         double lookUpHeight(double x, double z);
         double remap(double value, double low1, double low2, double high1, double high2);
+
+        double lookUpFoliageRChannel(double x, double z);
+        double lookUpFoliageGChannel(double x, double z);
 
         double minDepth = 0;
         double maxDepth = 100;

@@ -10,6 +10,7 @@ MObject CIS660AuthoringToolNode::width;
 MObject CIS660AuthoringToolNode::height;
 MObject CIS660AuthoringToolNode::mindepth;
 MObject CIS660AuthoringToolNode::maxdepth;
+MObject CIS660AuthoringToolNode::fpath;
 MObject CIS660AuthoringToolNode::hpath;
 MObject CIS660AuthoringToolNode::size;
 MObject CIS660AuthoringToolNode::outputMesh;
@@ -48,6 +49,9 @@ MStatus CIS660AuthoringToolNode::initialize()
     CIS660AuthoringToolNode::hpath = typedAttr.MFnTypedAttribute::create("hpath", "hp", MFnData::kString, &returnStatus);
     McheckErr(returnStatus, "ERROR creating CIS660AuthoringToolNode height path attribute\n");
 
+    CIS660AuthoringToolNode::fpath = typedAttr.MFnTypedAttribute::create("fpath", "fp", MFnData::kString, &returnStatus);
+    McheckErr(returnStatus, "ERROR creating CIS660AuthoringToolNode foliage path attribute\n");
+
     CIS660AuthoringToolNode::inNumPoints = numAttr.MFnNumericAttribute::create("inputPoints", "ip", MFnNumericData::kLong, 0, &returnStatus);
     McheckErr(returnStatus, "ERROR creating CIS660AuthoringToolNode inputPoints attribute\n");
 
@@ -77,6 +81,8 @@ MStatus CIS660AuthoringToolNode::initialize()
     McheckErr(returnStatus, "ERROR adding max depth attribute\n");
     returnStatus = addAttribute(CIS660AuthoringToolNode::hpath);
     McheckErr(returnStatus, "ERROR adding height path attribute\n");
+    returnStatus = addAttribute(CIS660AuthoringToolNode::fpath);
+    McheckErr(returnStatus, "ERROR adding foliage path attribute\n");
     returnStatus = addAttribute(CIS660AuthoringToolNode::outputMesh);
     McheckErr(returnStatus, "ERROR adding output mesh attribute\n");
     returnStatus = addAttribute(CIS660AuthoringToolNode::inNumPoints);
@@ -97,6 +103,8 @@ MStatus CIS660AuthoringToolNode::initialize()
     McheckErr(returnStatus, "ERROR in attributeAffects (maxdepth affecting outputMesh)\n");
     returnStatus = attributeAffects(CIS660AuthoringToolNode::hpath, CIS660AuthoringToolNode::outputMesh);
     McheckErr(returnStatus, "ERROR in attributeAffects (hpath affecting outputMesh)\n");
+    returnStatus = attributeAffects(CIS660AuthoringToolNode::fpath, CIS660AuthoringToolNode::outputMesh);
+    McheckErr(returnStatus, "ERROR in attributeAffects (fpath affecting outputMesh)\n");
     returnStatus = attributeAffects(CIS660AuthoringToolNode::time, CIS660AuthoringToolNode::outputMesh);
     McheckErr(returnStatus, "ERROR in attributeAffects (time affecting outputMesh)\n");
 
@@ -117,6 +125,8 @@ MStatus CIS660AuthoringToolNode::initialize()
     McheckErr(returnStatus, "ERROR in attributeAffects (maxdepth affecting outPoints)\n");
     returnStatus = attributeAffects(CIS660AuthoringToolNode::hpath, CIS660AuthoringToolNode::outPoints);
     McheckErr(returnStatus, "ERROR in attributeAffects (hpath affecting outPoints)\n");
+    returnStatus = attributeAffects(CIS660AuthoringToolNode::fpath, CIS660AuthoringToolNode::outPoints);
+    McheckErr(returnStatus, "ERROR in attributeAffects (fpath affecting outPoints)\n");
 
     return MS::kSuccess;
 }
@@ -159,9 +169,15 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
         McheckErr(returnStatus, "Error getting maxdepth  data handle\n");
         double maxDepthVal = maxDepthData.asDouble();
 
+        // get height path data
         MDataHandle heightPathData = data.inputValue(hpath, &returnStatus);
         McheckErr(returnStatus, "Error getting height path data handle\n");
         MString heightPathVal = heightPathData.asString();
+
+        // get foliage path
+        MDataHandle foliagePathData = data.inputValue(fpath, &returnStatus);
+        McheckErr(returnStatus, "Error getting foliage path data handle\n");
+        MString foliagePathVal = foliagePathData.asString();
 
         // get num points
         MDataHandle inNumPointsData = data.inputValue(inNumPoints, &returnStatus);
@@ -191,41 +207,54 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
         MVectorArray scaleArray = pointsAAD.vectorArray("scale");
         MDoubleArray idArray = pointsAAD.doubleArray("id");
 
+        std::string file_path = foliagePathVal.asChar();
+        if (!file_path.empty())
+        {
+            char const* filep = file_path.c_str();
+            foliageMap.load(filep);
+        }
+
+
+        // TODO: Change how you are placing trees.
+        // Go through each pixel in foliage map
+        // Look up r value, multiple by inNumPointsVal, place that number of trees?
+        // Look up g value, multiply by user heigh input, scale appropriately
+
         // loop to fill the arrays
         for (int i = 0; i < inNumPointsVal; i++)
             {
-            // randomly generate an x coord and z coord within [0, width] and [0, height], then remap
-            // look up the height in the image for y coord
-            int lowest = -sizeVal / 2.0;
-            int highest = -lowest;
-            int range = (highest - lowest) + 1;
-            int rx = lowest + int(range*rand() / (RAND_MAX + 1.0));
-            int rz = lowest + int(range*rand() / (RAND_MAX + 1.0));
-            double remapX = remap(rx, (-sizeVal / 2.0), 0.0, (sizeVal / 2.0), 255.0);
-            double remapZ = remap(rz, (-sizeVal / 2.0), 0.0, (sizeVal / 2.0), 255.0);
-            double y = lookUpHeight(remapX, remapZ);
+                // randomly generate an x coord and z coord within [0, width] and [0, height], then remap
+                // look up the height in the image for y coord
+                int lowest = -sizeVal / 2.0;
+                int highest = -lowest;
+                int range = (highest - lowest) + 1;
+                int rx = lowest + int(range*rand() / (RAND_MAX + 1.0));
+                int rz = lowest + int(range*rand() / (RAND_MAX + 1.0));
+                double remapX = remap(rx, (-sizeVal / 2.0), 0.0, (sizeVal / 2.0), 255.0);
+                double remapZ = remap(rz, (-sizeVal / 2.0), 0.0, (sizeVal / 2.0), 255.0);
+                double y = lookUpHeight(remapX, remapZ);
          
-            // Trees that are taller rotate less
-            double yScale = ((double) rand() / (RAND_MAX)); // TODO: H variable set by node slider
-            double maxX = yScale * 10;
-            double minX = -maxX;
-            double maxZ = yScale * 10;
-            double minZ = -maxZ;
-            double xRot = (maxX - minX) * ((double) rand() / (double) RAND_MAX) + minX;
-            double zRot = (maxZ - minZ) * ( (double)rand() / (double)RAND_MAX ) + minZ;
+                // Trees that are taller rotate less
+                double yScale = ((double) rand() / (RAND_MAX)); // TODO: H variable set by node slider
+                double maxX = yScale * 10;
+                double minX = -maxX;
+                double maxZ = yScale * 10;
+                double minZ = -maxZ;
+                double xRot = (maxX - minX) * ((double) rand() / (double) RAND_MAX) + minX;
+                double zRot = (maxZ - minZ) * ((double) rand() / (double) RAND_MAX) + minZ;
 
-    /*Cube
-            positionArray.append(MVector(rx + ((double) rand() / (RAND_MAX)) - 1.0, (y + .5f), rz + ((double) rand() / (RAND_MAX)) - 1.0));
-            rotationArray.append(MVector(xRot, 0, zRot)); // max rotation in either direction should be 5 degrees
-            scaleArray.append(MVector(.50, abs(yScale - .5), .50));*/
+                /*Cube
+                positionArray.append(MVector(rx + ((double) rand() / (RAND_MAX)) - 1.0, (y + .5f), rz + ((double) rand() / (RAND_MAX)) - 1.0));
+                rotationArray.append(MVector(xRot, 0, zRot)); // max rotation in either direction should be 5 degrees
+                scaleArray.append(MVector(.50, abs(yScale - .5), .50));*/
 
-            // Object:
-            // TODO: What does y position have to be, given a yScale, such that the tree is placed at correct height on map?
-            positionArray.append(MVector(rx + ((double) rand() / (RAND_MAX)) - 1.0, y, rz + ((double) rand() / (RAND_MAX)) - 1.0));
-            rotationArray.append(MVector(xRot, 0, zRot)); // max rotation in either direction should be 5 degrees
-            scaleArray.append(MVector(1.0, abs(yScale), 1.0));
+                // Object:
+                // TODO: What does y position have to be, given a yScale, such that the tree is placed at correct height on map?
+                positionArray.append(MVector(rx + ((double) rand() / (RAND_MAX)) - 1.0, y, rz + ((double) rand() / (RAND_MAX)) - 1.0));
+                rotationArray.append(MVector(xRot, 0, zRot)); // max rotation in either direction should be 5 degrees
+                scaleArray.append(MVector(1.0, abs(yScale), 1.0));
 
-            idArray.append(i);
+                idArray.append(i);
             }
 
         pointsData.setMObject(pointsObject);
@@ -306,7 +335,35 @@ void CIS660AuthoringToolNode::createPlane(int width, int height, double s)
     num_edges = num_face_connects / 2;
 }
 
+double CIS660AuthoringToolNode::lookUpFoliageRChannel(double x, double z)
+{
+    if (foliageMap.is_empty())
+    {
+        return 0;
+    }
 
+    int px = floor(x);
+    int pz = floor(z);
+
+    double r = foliageMap(px, pz, 0, 0);
+    return r;
+
+}
+
+double CIS660AuthoringToolNode::lookUpFoliageGChannel(double x, double z)
+{
+    if (foliageMap.is_empty())
+        {
+        return 0;
+        }
+
+    int px = floor(x);
+    int pz = floor(z);
+
+    double g = foliageMap(px, pz, 0, 1);
+    return g;
+
+}
 
 double CIS660AuthoringToolNode::remap(double value, double low1, double low2, double high1, double high2)
 {
