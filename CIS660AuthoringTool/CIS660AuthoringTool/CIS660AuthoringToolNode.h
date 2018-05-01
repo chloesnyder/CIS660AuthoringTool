@@ -58,7 +58,6 @@ class CIS660AuthoringToolNode : public MPxNode
         static MObject outputMesh;
 
         static MObject outPoints;
-        static MObject inNumPoints;
 
         // Poly primitive
         int num_verts;                  // Number of vertices of polygon

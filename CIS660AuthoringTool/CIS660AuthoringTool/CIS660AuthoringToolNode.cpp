@@ -12,9 +12,7 @@ MObject CIS660AuthoringToolNode::maxdepth;
 MObject CIS660AuthoringToolNode::fpath;
 MObject CIS660AuthoringToolNode::hpath;
 MObject CIS660AuthoringToolNode::outputMesh;
-
 MObject CIS660AuthoringToolNode::outPoints;
-MObject CIS660AuthoringToolNode::inNumPoints;
 
 MStatus CIS660AuthoringToolNode::initialize()
 {
@@ -50,11 +48,6 @@ MStatus CIS660AuthoringToolNode::initialize()
     CIS660AuthoringToolNode::fpath = typedAttr.MFnTypedAttribute::create("fpath", "fp", MFnData::kString, &returnStatus);
     McheckErr(returnStatus, "ERROR creating CIS660AuthoringToolNode foliage path attribute\n");
 
-    CIS660AuthoringToolNode::inNumPoints = numAttr.MFnNumericAttribute::create("inputPoints", "ip", MFnNumericData::kLong, 0, &returnStatus);
-    numAttr.setMin(0.0);
-    numAttr.setMax(10000.0);
-    McheckErr(returnStatus, "ERROR creating CIS660AuthoringToolNode inputPoints attribute\n");
-
     CIS660AuthoringToolNode::outputMesh = typedAttr.create("outputMesh", "out", MFnData::kMesh, &returnStatus);
     McheckErr(returnStatus, "ERROR creating CIS660AuthoringToolNode output mesh attribute\n");
     CHECK_MSTATUS(typedAttr.setStorable(false));
@@ -81,8 +74,6 @@ MStatus CIS660AuthoringToolNode::initialize()
     McheckErr(returnStatus, "ERROR adding foliage path attribute\n");
     returnStatus = addAttribute(CIS660AuthoringToolNode::outputMesh);
     McheckErr(returnStatus, "ERROR adding output mesh attribute\n");
-    returnStatus = addAttribute(CIS660AuthoringToolNode::inNumPoints);
-    McheckErr(returnStatus, "ERROR adding in points attribute\n");
     returnStatus = addAttribute(CIS660AuthoringToolNode::outPoints);
     McheckErr(returnStatus, "ERROR adding output points attribute\n");
 
@@ -101,8 +92,6 @@ MStatus CIS660AuthoringToolNode::initialize()
     McheckErr(returnStatus, "ERROR in attributeAffects (time affecting outputMesh)\n");
 
     // attribute affect output points
-    returnStatus = attributeAffects(CIS660AuthoringToolNode::inNumPoints, CIS660AuthoringToolNode::outPoints);
-    McheckErr(returnStatus, "ERROR in attributeAffects (inNumPoints affecting outPoints)\n");
     returnStatus = attributeAffects(CIS660AuthoringToolNode::time, CIS660AuthoringToolNode::outPoints);
     McheckErr(returnStatus, "ERROR in attributeAffects (time affecting outPoints)\n");
     returnStatus = attributeAffects(CIS660AuthoringToolNode::treeHeight, CIS660AuthoringToolNode::outPoints);
@@ -155,13 +144,7 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
         // get foliage path
         MDataHandle foliagePathData = data.inputValue(fpath, &returnStatus);
         McheckErr(returnStatus, "Error getting foliage path data handle\n");
-        MString foliagePathVal = foliagePathData.asString();
-
-        // get num points
-        MDataHandle inNumPointsData = data.inputValue(inNumPoints, &returnStatus);
-        McheckErr(returnStatus, "Error getting num points data handle\n");
-        int inNumPointsVal = inNumPointsData.asInt();
-      
+        MString foliagePathVal = foliagePathData.asString();     
       
         // Mesh output
         //get output object
@@ -185,62 +168,118 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
         MVectorArray scaleArray = pointsAAD.vectorArray("scale");
         MDoubleArray idArray = pointsAAD.doubleArray("id");
 
+        int width = 0;
+        int height = 0;
+        int size = 0;
+
         std::string file_path = foliagePathVal.asChar();
         if (!file_path.empty())
         {
             char const* filep = file_path.c_str();
             foliageMap.load(filep);
+            height = foliageMap.height(); // assumes square iamge
+            width = foliageMap.width();
+            size = height;
         }
 
+        for (int px = 0; px < width; px++)
+        {
+            for (int pz = 0; pz < height; pz++)
+            {
+                int numTreesInCell = lookUpFoliageRChannel(px, pz);
+                if (numTreesInCell > 0)
+                {
+                    double g = lookUpFoliageGChannel(px, pz);
+                    double treeHeight = treeHeightVal * g;
 
+                    double minWorldX = remap(px, 0.0, -size / 2.0, 255.0, size / 2.0);
+                    double minWorldZ = remap(pz, 0.0, -size / 2.0, 255.0, size / 2.0);
+                    double centerX = remap(px + 0.5, 0.0, -size / 2.0, 255.0, size / 2.0);
+                    double centerZ = remap(pz + 0.5, 0.0, -size / 2.0, 255.0, size / 2.0);
+                    double maxWorldX = remap(px + 1.0, 0.0, -size / 2.0, 255.0, size / 2.0);
+                    double maxWorldZ = remap(pz + 1.0, 0.0, -size / 2.0, 255.0, size / 2.0);
+
+                    double worldTreeY = lookUpHeight(px, pz);
+
+                    // taller trees rotate more
+                 //   double maxRotX = treeHeight * 0.01;
+                   // double minRotX = -maxRotX;
+                   // double maxRotZ = treeHeight * 0.01;
+                   // double minRotZ = -maxRotZ;
+
+                    for (int i = 0; i < numTreesInCell; i++)
+                        {
+                        // generate random rotation
+                      //  double xRot = (maxRotX - minRotX) * ((double) rand() / (double) RAND_MAX) + minRotX;
+                      //  double zRot = (maxRotZ - minRotZ) * ((double) rand() / (double) RAND_MAX) + minRotZ;
+
+                        // randomly place a tree inside the cell
+                        double worldTreeX = (maxWorldX - minWorldX) * ((double) rand() / (double) RAND_MAX) + minWorldX;
+                        double worldTreeZ = (maxWorldZ - minWorldZ) * ((double) rand() / (double) RAND_MAX) + minWorldZ;
+
+                        positionArray.append(MVector(worldTreeX, worldTreeY, worldTreeZ));
+                        //  rotationArray.append(MVector(xRot, 0, zRot)); // max rotation in either direction should be 5 degrees
+                        scaleArray.append(MVector(1.0, treeHeight, 1.0));
+                        rotationArray.append(MVector(0, 0, 0));
+                      //  scaleArray.append(MVector(1.0, 1.0, 1.0));
+
+                        idArray.append(i);
+                        }
+                 }
+            }
+        }
+
+         
         // TODO: Change how you are placing trees.
         // Go through each pixel in foliage map
         // Look up r value, multiply by inNumPointsVal, place that number of trees?
         // Look up g value, multiply by treeHeight input, scale appropriately
 
-        /*pseudo code:
-        double x, z;
-        //set by foliage path
-        for (z = -size / 2.0; z <= size / 2.0; z += hSize)
-        {
-             for (x = -size / 2.0; x <= size / 2.0; x += wSize)
-             {
-                // remap x and z from range [-size/2.0, size/2.0] to range [0,256]             
-                double remapX = remap(x, (-size / 2.0), 0.0, (size / 2.0), 255.0);
-                double remapZ = remap(z, (-size / 2.0), 0.0, (size / 2.0), 255.0);
-                double yScale =  treeHeightVal * lookUpFoliageGChannel(remapX, remapZ);
-                int numTreesInCell = inNumPointsVal * lookUpFoliageRChannel(remapX, remapZ);
-                double y = lookUpHeight(remapX, remapZ);
+      ////  pseudo code:
+      //  double x, z;
+      //  //set by foliage path
+      //  for (z = -size / 2.0; z <= size / 2.0; z++)
+      //  {
+      //       for (x = -size / 2.0; x <= size / 2.0; x++)
+      //       {
+      //          // remap x and z from range [-size/2.0, size/2.0] to range [0,256]             
+      //          double remapX = remap(x, (-size / 2.0), 0.0, (size / 2.0), 255.0);
+      //          double remapZ = remap(z, (-size / 2.0), 0.0, (size / 2.0), 255.0);
+      //          double yScale =  treeHeightVal * lookUpFoliageGChannel(remapX, remapZ);
+      //          // 0-255 trees in a cell
+      //          int numTreesInCell = lookUpFoliageRChannel(remapX, remapZ);
+      //          double y = lookUpHeight(remapX, remapZ);
 
-                double maxX = yScale * 10;
-                double minX = -maxX;
-                double maxZ = yScale * 10;
-                double minZ = -maxZ;
+      //          double maxX = yScale * 10;
+      //          double minX = -maxX;
+      //          double maxZ = yScale * 10;
+      //          double minZ = -maxZ;
 
-                for(int i = 0; i < numTreesInCell; i++) {
-                    double xRot = (maxX - minX) * ((double) rand() / (double) RAND_MAX) + minX;
-                    double zRot = (maxZ - minZ) * ((double) rand() / (double) RAND_MAX) + minZ;
+      //          // (x,z) represents the lowest corner of a cell
+      //          // randomly distribute trees from (x, z) to (x+1, z+1)
+      //          for(int i = 0; i < numTreesInCell; i++) {
+      //              double xRot = (maxX - minX) * ((double) rand() / (double) RAND_MAX) + minX;
+      //              double zRot = (maxZ - minZ) * ((double) rand() / (double) RAND_MAX) + minZ;
 
-                    int lowest = -sizeVal / 2.0; // TODO: What is the "size" of the cell? Use this to generate lowest/highest
-                                                 // values for the x and z offsets. It probably won't be "sizeVal/2.0", might be more 
-                                                 // like sizeVal/10. sizeVal is the overall size of the plane
-                    int highest = -lowest;
-                    int range = (highest - lowest) + 1;
-                    int xOffset = lowest + int(range*rand() / (RAND_MAX + 1.0));
-                    int zOffset = lowest + int(range*rand() / (RAND_MAX + 1.0));
+      //              int highestx = std::min(size / 2.0, x + 1);
+      //              int rangex = (highestx - x) + 1;
+      //              int highestz = std::min(size / 2.0, z + 1);
+      //              int rangez = (highestz - z) + 1;
+      //              int xOffset = x + int(rangex*rand() / (RAND_MAX + 1.0));
+      //              int zOffset = z + int(rangez*rand() / (RAND_MAX + 1.0));
 
-                    positionArray.append(MVector(x + xOffset, y, z + zOffset));
-                    rotationArray.append(MVector(xRot, 0, zRot)); // max rotation in either direction should be 5 degrees
-                    scaleArray.append(MVector(1.0, abs(yScale), 1.0));
+      //              positionArray.append(MVector(x + xOffset, y, z + zOffset));
+      //              rotationArray.append(MVector(xRot, 0, zRot)); // max rotation in either direction should be 5 degrees
+      //              scaleArray.append(MVector(1.0, abs(yScale), 1.0));
 
-                    idArray.append(i);
-                }
-            }
-        }
-        */
+      //              idArray.append(i);
+      //          }
+      //      }
+      //  }
+        
 
         // loop to fill the arrays
-        for (int i = 0; i < inNumPointsVal; i++)
+    /*    for (int i = 0; i < inNumPointsVal; i++)
             {
                 // randomly generate an x coord and z coord within [0, width] and [0, height], then remap
                 // look up the height in the image for y coord
@@ -269,13 +308,13 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
 
                 // Object:
                 // TODO: What does y position have to be, given a yScale, such that the tree is placed at correct height on map?
-                positionArray.append(MVector(rx + ((double) rand() / (RAND_MAX)) - 1.0, y, rz + ((double) rand() / (RAND_MAX)) - 1.0));
+          /*      positionArray.append(MVector(rx + ((double) rand() / (RAND_MAX)) - 1.0, y, rz + ((double) rand() / (RAND_MAX)) - 1.0));
                 rotationArray.append(MVector(xRot, 0, zRot)); // max rotation in either direction should be 5 degrees
                 scaleArray.append(MVector(1.0, abs(yScale), 1.0));
 
                 idArray.append(i);
-            }
-
+            }*/
+            
         pointsData.setMObject(pointsObject);
         McheckErr(returnStatus, "ERROR creating outpoints");
         data.setClean(plug);
@@ -380,7 +419,10 @@ double CIS660AuthoringToolNode::lookUpFoliageGChannel(double x, double z)
     int pz = floor(z);
 
     double g = foliageMap(px, pz, 0, 1);
-    return g;
+
+    // remap g from [0, 255] to [0, 1]
+    double remapG = remap(g, 0.0, 0.0, 255.0, 1.0);
+    return remapG;
 
 }
 
