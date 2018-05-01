@@ -39,6 +39,8 @@ using namespace cimg_library;
                 return MS::kFailure;    \
         }
 
+inline double lerp(double a, double b, double t) { return t * b + (1.f - t) * a; }
+
 class CIS660AuthoringToolNode : public MPxNode
 {
     public:
