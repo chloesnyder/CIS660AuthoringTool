@@ -428,22 +428,25 @@ MObject CIS660AuthoringToolNode::createMesh(const MTime& time, const int& width,
     faceCounts.clear();
     faceConnects.clear();
 
-    int sx = 128;
-    int sy = 128;
-    double size = 2.0;
+    int sx = width;
+    int sy = height;
+    double size = s;
 
     std::string file_path = heightPath.asChar();
     if(!file_path.empty())
     {
         char const* fp = file_path.c_str();
         heightMap.load(fp);
+        sx = heightMap.width();
+        sy = heightMap.height();
+        size = sx; // assumes square images
     }
 
     minDepth = min_depth;
     maxDepth = max_depth;
 
 
-    createPlane(width, height, s);
+    createPlane(sx, sy, size);
     p_gons = NULL; // Is this still true if plane isn't just 2 by 2?
 
     //construct point array
