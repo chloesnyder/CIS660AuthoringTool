@@ -192,14 +192,14 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
                     double g = lookUpFoliageGChannel(px, pz);
                     double treeHeight = treeHeightVal * g;
 
-                    double minWorldX = remap(px, 0.0, -size / 2.0, 255.0, size / 2.0);
+               /*     double minWorldX = remap(px, 0.0, -size / 2.0, 255.0, size / 2.0);
                     double minWorldZ = remap(pz, 0.0, -size / 2.0, 255.0, size / 2.0);
                     double centerX = remap(px + 0.5, 0.0, -size / 2.0, 255.0, size / 2.0);
                     double centerZ = remap(pz + 0.5, 0.0, -size / 2.0, 255.0, size / 2.0);
                     double maxWorldX = remap(px + 1.0, 0.0, -size / 2.0, 255.0, size / 2.0);
                     double maxWorldZ = remap(pz + 1.0, 0.0, -size / 2.0, 255.0, size / 2.0);
 
-                    double worldTreeY = lookUpHeight(px, pz);
+                    double worldTreeY = lookUpHeight(px, pz);*/
 
                        // taller trees rotate more
                  //   double maxRotX = treeHeight * 0.01;
@@ -207,45 +207,79 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
                    // double maxRotZ = treeHeight * 0.01;
                    // double minRotZ = -maxRotZ;
 
+                //    double centerX = remap(px + 0.5, 0.0, -size / 2.0, 255.0, size / 2.0);
+                //    double centerZ = remap(pz + 0.5, 0.0, -size / 2.0, 255.0, size / 2.0);
+
                     for (int i = 0; i < numTreesInCell; i++)
                         {
 
                         double offset = remap(((double) rand() / (double) RAND_MAX), 0.0, -treeHeight / 2.0, 1.0, treeHeight / 2.0);
                         double treeHeightOffset = treeHeight + offset;
 
-                        // generate random rotation
-                      //  double xRot = (maxRotX - minRotX) * ((double) rand() / (double) RAND_MAX) + minRotX;
-                      //  double zRot = (maxRotZ - minRotZ) * ((double) rand() / (double) RAND_MAX) + minRotZ;
+                        // taller trees rotate more
+                        double maxRotX = treeHeightOffset * (10.0/3.0);
+                        double minRotX = -maxRotX;
+                        double maxRotZ = treeHeightOffset * (10.0 / 3.0);
+                        double minRotZ = -maxRotZ;
 
-                        // randomly place a tree inside the cell
-                        double worldTreeX = (maxWorldX - minWorldX) * ((double) rand() / (double) RAND_MAX) + minWorldX;
-                        double worldTreeZ = (maxWorldZ - minWorldZ) * ((double) rand() / (double) RAND_MAX) + minWorldZ;
-                 //       worldTreeX -= .5f;
-               //         worldTreeZ -= .5f;
+                        double xRot = (maxRotX - minRotX) * ((double) rand() / (double) RAND_MAX) + minRotX;
+                        double zRot = (maxRotZ - minRotZ) * ((double) rand() / (double) RAND_MAX) + minRotZ;
 
-                        int x0 = (int) floor(worldTreeX + (size / 2));
+                        // generate a percent x and percent z offset in pixel space
+                        double percentX = ((double) rand() / (double) RAND_MAX) - 0.5; // should this be -1 to 1?
+                        double percentZ = ((double) rand() / (double) RAND_MAX) - 0.5;
+
+                        // center of pixel + percent offset = location in screen space
+                        int x0 = (int) floor(px - .5 + percentX);
                         int x1 = x0 + (size / width);
-                        int z0 = (int) floor(worldTreeZ + (size / 2));
-                        int z1 = z0 + (size / height);
-
-                      /*  int x0 = (int) floor(worldTreeX + 128);
-                        int x1 = x0 + 1;
-                        int z0 = (int) floor(worldTreeZ + 128);
-                        int z1 = z0 + 1;*/
+                        int z0 = (int) floor(pz + .5  + percentZ);
+                        int z1 = z0 + (size / width);
 
                         double h00 = lookUpHeight(x0, z0);
                         double h01 = lookUpHeight(x0, z1);
                         double h10 = lookUpHeight(x1, z0);
                         double h11 = lookUpHeight(x1, z1);
 
-                        double h0 = lerp(h00, h01, (worldTreeX + width/2.0) - x0);
-                        double h1 = lerp(h10, h11, (worldTreeX + width/2.0) - x0);
-                        double h = lerp(h0, h1, (worldTreeZ + height/2.0) - z0);
+                       double h0 = lerp(h00, h01, (px - .5 + percentX) - x0);
+                       double h1 = lerp(h10, h11, (px - .5 + percentX) - x0);
+                       double h = lerp(h0, h1, (pz + .5 + percentZ) - z0);
+
+                       double worldTreeX = remap(px - .5 + percentX, 0.0, -size / 2.0, 255.0, size / 2.0);
+                       double worldTreeZ = remap(pz + .5 + percentZ, 0.0, -size / 2.0, 255.0, size / 2.0);
+
+               //         // generate random rotation
+               //       //  double xRot = (maxRotX - minRotX) * ((double) rand() / (double) RAND_MAX) + minRotX;
+               //       //  double zRot = (maxRotZ - minRotZ) * ((double) rand() / (double) RAND_MAX) + minRotZ;
+
+               //         // randomly place a tree inside the cell
+               //         double worldTreeX = (maxWorldX - minWorldX) * ((double) rand() / (double) RAND_MAX) + minWorldX;
+               //         double worldTreeZ = (maxWorldZ - minWorldZ) * ((double) rand() / (double) RAND_MAX) + minWorldZ;
+               //  //       worldTreeX -= .5f;
+               ////         worldTreeZ -= .5f;
+
+               //         int x0 = (int) floor(worldTreeX + (size / 2));
+               //         int x1 = x0 + (size / width);
+               //         int z0 = (int) floor(worldTreeZ + (size / 2));
+               //         int z1 = z0 + (size / height);
+
+               //       /*  int x0 = (int) floor(worldTreeX + 128);
+               //         int x1 = x0 + 1;
+               //         int z0 = (int) floor(worldTreeZ + 128);
+               //         int z1 = z0 + 1;*/
+
+               //         double h00 = lookUpHeight(x0, z0);
+               //         double h01 = lookUpHeight(x0, z1);
+               //         double h10 = lookUpHeight(x1, z0);
+               //         double h11 = lookUpHeight(x1, z1);
+
+               //         double h0 = lerp(h00, h01, (worldTreeX + width) - x0);
+               //         double h1 = lerp(h10, h11, (worldTreeX + width/2.0) - x0);
+               //         double h = lerp(h0, h1, (worldTreeZ + height/2.0) - z0);
 
                         positionArray.append(MVector(worldTreeX, h, worldTreeZ));
-                        //  rotationArray.append(MVector(xRot, 0, zRot)); // max rotation in either direction should be 5 degrees
-                        scaleArray.append(MVector(treeHeightOffset * .15, treeHeightOffset, treeHeightOffset * .15));
-                        rotationArray.append(MVector(0, 0, 0));
+                        rotationArray.append(MVector(xRot, 0, zRot)); // max rotation in either direction should be 5 degrees
+                        scaleArray.append(MVector(treeHeightOffset * .25, treeHeightOffset * .9, treeHeightOffset * .25));
+                      //  rotationArray.append(MVector(0, 0, 0));
 
 
                         idArray.append(i);

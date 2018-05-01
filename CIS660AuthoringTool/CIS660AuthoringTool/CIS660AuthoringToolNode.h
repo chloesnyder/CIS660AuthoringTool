@@ -85,7 +85,7 @@ class CIS660AuthoringToolNode : public MPxNode
         double lookUpFoliageGChannel(double x, double z);
 
         double minDepth = 0;
-        double maxDepth = 100;
+        double maxDepth = 0;
 
         MObject newTransform;
         MDGModifier dgModifier;
