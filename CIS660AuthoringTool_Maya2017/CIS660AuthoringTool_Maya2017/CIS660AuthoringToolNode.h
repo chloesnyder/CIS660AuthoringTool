@@ -77,6 +77,8 @@ class CIS660AuthoringToolNode : public MPxNode
         CImg<float> heightMap;
         CImg<float> foliageMap;
 
+        double getGrayscale(int x, int z);
+
         void FILL(double x, double y, double z);
         double lookUpHeight(double x, double z);
         double remap(double value, double low1, double low2, double high1, double high2);
