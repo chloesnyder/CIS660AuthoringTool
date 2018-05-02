@@ -192,24 +192,6 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
                     double g = lookUpFoliageGChannel(px, pz);
                     double treeHeight = treeHeightVal * g;
 
-               /*     double minWorldX = remap(px, 0.0, -size / 2.0, 255.0, size / 2.0);
-                    double minWorldZ = remap(pz, 0.0, -size / 2.0, 255.0, size / 2.0);
-                    double centerX = remap(px + 0.5, 0.0, -size / 2.0, 255.0, size / 2.0);
-                    double centerZ = remap(pz + 0.5, 0.0, -size / 2.0, 255.0, size / 2.0);
-                    double maxWorldX = remap(px + 1.0, 0.0, -size / 2.0, 255.0, size / 2.0);
-                    double maxWorldZ = remap(pz + 1.0, 0.0, -size / 2.0, 255.0, size / 2.0);
-
-                    double worldTreeY = lookUpHeight(px, pz);*/
-
-                       // taller trees rotate more
-                 //   double maxRotX = treeHeight * 0.01;
-                   // double minRotX = -maxRotX;
-                   // double maxRotZ = treeHeight * 0.01;
-                   // double minRotZ = -maxRotZ;
-
-                //    double centerX = remap(px + 0.5, 0.0, -size / 2.0, 255.0, size / 2.0);
-                //    double centerZ = remap(pz + 0.5, 0.0, -size / 2.0, 255.0, size / 2.0);
-
                     for (int i = 0; i < numTreesInCell; i++)
                         {
 

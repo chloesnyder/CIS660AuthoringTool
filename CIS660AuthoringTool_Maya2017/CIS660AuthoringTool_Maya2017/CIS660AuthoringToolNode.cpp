@@ -186,7 +186,7 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
             {
             for (float pz = 0; pz < height; pz++)
                 {
-                int numTreesInCell = lookUpFoliageRChannel(px, pz);
+                int numTreesInCell = lookUpFoliageRChannel(px, pz) / 2;
                 if (numTreesInCell > 0)
                     {
                     double g = lookUpFoliageGChannel(px, pz);
@@ -195,7 +195,7 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
                     for (int i = 0; i < numTreesInCell; i++)
                         {
 
-                        double offset = remap(((double) rand() / (double) RAND_MAX), 0.0, -treeHeight / 4.0, 1.0, treeHeight / 4.0);
+                        double offset = remap(((double) rand() / (double) RAND_MAX), 0.0, -treeHeight / 2.0, 1.0, treeHeight / 2.0);
                         double treeHeightOffset = treeHeight + offset;
 
                         // taller trees rotate more
@@ -228,17 +228,9 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
                         float worldTreeX = remap(px + percentX, 0.0, -size / 2.0, 255.0, size / 2.0);
                         float worldTreeZ = remap(pz + percentZ, 0.0, -size / 2.0, 255.0, size / 2.0);
 
-/*                        if (maxDepth > 0)
-                            {
-                            positionArray.append(MVector(worldTreeX, (float) h + (.25 * treeHeightOffset), worldTreeZ));
-                            }
-                        else {
-                            positionArray.append(MVector(worldTreeX, (float) h, worldTreeZ));
-                            }*/
-
                         positionArray.append(MVector(worldTreeX, (float) h, worldTreeZ));
                         rotationArray.append(MVector(xRot, 0, zRot)); // max rotation in either direction should be 5 degrees
-                        scaleArray.append(MVector(treeHeightOffset * .25, treeHeightOffset * .9, treeHeightOffset * .25));
+                        scaleArray.append(MVector(treeHeightOffset * .75, treeHeightOffset * .9, treeHeightOffset * .75));
                         idArray.append(i);
                         }
                     }
@@ -364,6 +356,11 @@ double CIS660AuthoringToolNode::remap(double value, double low1, double low2, do
 
 double CIS660AuthoringToolNode::getGrayscale(int x, int z)
     {
+        if (x < 0) x = 0;
+        if (z < 0) z = 0;
+        if (x > 255) x = 255;
+        if (z > 255) z = 255;
+
         float r = heightMap(x, z, 0, 0);
         float g = heightMap(x, z, 0, 1);
         float b = heightMap(x, z, 0, 2);
@@ -384,22 +381,6 @@ double  CIS660AuthoringToolNode::lookUpHeight(double x, double z)
         {
         return 0;
         }
-
- /*   //get pixel (x, z) = [R, G, B]. Convert to height
-    //by converting to grayscale:( (0.3 * R) + (0.59 * G) + (0.11 * B) ) 
-    int px = floor(x);
-    int pz = floor(z);
-
-    int r = floor(heightMap(px, pz, 0, 0));
-    int g = floor(heightMap(px, pz, 0, 1));
-    int b = floor(heightMap(px, pz, 0, 2));
-
-    double height = (.3 * r) + (.59 * g) + (.11 * b);
-
-    //remap height to be in a certain range based on slider
-    double maxHeight = (.3 * 255) + (.58 * 255) + (.11 * 255); // 252.45 is max height
-    double minHeight = 0;
-    height = remap(height, minHeight, minDepth, maxHeight, maxDepth);*/
 
     //bilinear interpolation for height
 
@@ -428,10 +409,6 @@ MObject CIS660AuthoringToolNode::createMesh(const MTime& time, const int& width,
                                             const double& min_depth, const double& max_depth, const MString& heightPath, MObject& outData, MStatus& stat)
     {
 
-    // create a poly function set
-    //
-    //MFnMesh fnPoly;
-
     iarr.clear();
     faceCounts.clear();
     faceConnects.clear();
@@ -455,7 +432,7 @@ MObject CIS660AuthoringToolNode::createMesh(const MTime& time, const int& width,
 
 
     createPlane(2.0 * sx, 2.0 * sy, size); // double the resolution
-    p_gons = NULL; // Is this still true if plane isn't just 2 by 2?
+    p_gons = NULL; 
 
                    //construct point array
     pa.clear();

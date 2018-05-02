@@ -1,2 +1,13 @@
-﻿     Creating library Release\CIS660AuthoringTool_Maya2017.lib and object Release\CIS660AuthoringTool_Maya2017.exp
+﻿  CIS660AuthoringToolNode.cpp
+CIS660AuthoringToolNode.cpp(189): warning C4244: 'initializing' : conversion from 'double' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(228): warning C4244: 'initializing' : conversion from 'double' to 'float', possible loss of data
+CIS660AuthoringToolNode.cpp(229): warning C4244: 'initializing' : conversion from 'double' to 'float', possible loss of data
+CIS660AuthoringToolNode.cpp(326): warning C4244: 'initializing' : conversion from 'double' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(327): warning C4244: 'initializing' : conversion from 'double' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(341): warning C4244: 'initializing' : conversion from 'double' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(342): warning C4244: 'initializing' : conversion from 'double' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(387): warning C4244: 'initializing' : conversion from 'double' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(391): warning C4244: 'initializing' : conversion from 'double' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(434): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
+     Creating library Release\CIS660AuthoringTool_Maya2017.lib and object Release\CIS660AuthoringTool_Maya2017.exp
   CIS660AuthoringTool_Maya2017.vcxproj -> C:\Users\SIG\Documents\GitHub\CIS660AuthoringTool\CIS660AuthoringTool_Maya2017\CIS660AuthoringTool_Maya2017\Release\CIS660AuthoringTool_Maya2017.mll
