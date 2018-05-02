@@ -213,7 +213,7 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
                     for (int i = 0; i < numTreesInCell; i++)
                         {
 
-                        double offset = remap(((double) rand() / (double) RAND_MAX), 0.0, -treeHeight / 2.0, 1.0, treeHeight / 2.0);
+                        double offset = remap(((double) rand() / (double) RAND_MAX), 0.0, -treeHeight / 4.0, 1.0, treeHeight / 4.0);
                         double treeHeightOffset = treeHeight + offset;
 
                         // taller trees rotate more
@@ -226,26 +226,47 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
                         double zRot = (maxRotZ - minRotZ) * ((double) rand() / (double) RAND_MAX) + minRotZ;
 
                         // generate a percent x and percent z offset in pixel space
-                        double percentX = ((double) rand() / (double) RAND_MAX) - 0.5; // should this be -1 to 1?
+                        double percentX = ((double) rand() / (double) RAND_MAX) - 0.5; 
                         double percentZ = ((double) rand() / (double) RAND_MAX) - 0.5;
 
+                    //    double percentX = remap(((double) rand() / (double) RAND_MAX), 0.0, -1.0, 1.0, 1.0);
+                      //  double percentZ = remap(((double) rand() / (double) RAND_MAX), 0.0, -1.0, 1.0, 1.0);
+
+                        // is it px, px + .5, px - .5, or pz, pz + .5, pz - .5?
+
                         // center of pixel + percent offset = location in screen space
-                        int x0 = (int) floor(px - .5 + percentX);
-                        int x1 = x0 + (size / width);
-                        int z0 = (int) floor(pz + .5  + percentZ);
-                        int z1 = z0 + (size / width);
+                        //int x0 = (int) floor(px + .5 + percentX);
+                        //int x1 = x0 + (size / width);
+                        //int z0 = (int) floor(pz + .5  + percentZ);
+                        //int z1 = z0 + (size / width);
+                        //double x0 = (px + .5 + percentX);
+                        //double x1 = x0 + (size / width);
+                        //double z0 = (pz + .5 + percentZ);
+                        //double z1 = z0 + (size / width);
+
+                        double x0 = (px  + percentX);
+                        double x1 = x0 + (size / width);
+                        double z0 = (pz + percentZ);
+                        double z1 = z0 + (size / width);
 
                         double h00 = lookUpHeight(x0, z0);
                         double h01 = lookUpHeight(x0, z1);
                         double h10 = lookUpHeight(x1, z0);
                         double h11 = lookUpHeight(x1, z1);
 
-                       double h0 = lerp(h00, h01, (px - .5 + percentX) - x0);
-                       double h1 = lerp(h10, h11, (px - .5 + percentX) - x0);
+                        double h0 = lerp(h00, h01, (px + percentX) - x0);
+                        double h1 = lerp(h10, h11, (px  + percentX) - x0);
+                        double h = lerp(h0, h1, (pz  + percentZ) - z0);
+
+                        float worldTreeX = remap(px  + percentX, 0.0, -size / 2.0, 255.0, size / 2.0);
+                        float worldTreeZ = remap(pz + percentZ, 0.0, -size / 2.0, 255.0, size / 2.0);
+
+                       /*double h0 = lerp(h00, h01, (px + .5 + percentX) - x0);
+                       double h1 = lerp(h10, h11, (px + .5 + percentX) - x0);
                        double h = lerp(h0, h1, (pz + .5 + percentZ) - z0);
 
-                       double worldTreeX = remap(px - .5 + percentX, 0.0, -size / 2.0, 255.0, size / 2.0);
-                       double worldTreeZ = remap(pz + .5 + percentZ, 0.0, -size / 2.0, 255.0, size / 2.0);
+                       double worldTreeX = remap(px + .5 + percentX, 0.0, -size / 2.0, 255.0, size / 2.0);
+                       double worldTreeZ = remap(pz + .5 + percentZ, 0.0, -size / 2.0, 255.0, size / 2.0);*/
 
                //         // generate random rotation
                //       //  double xRot = (maxRotX - minRotX) * ((double) rand() / (double) RAND_MAX) + minRotX;
@@ -275,8 +296,14 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
                //         double h0 = lerp(h00, h01, (worldTreeX + width) - x0);
                //         double h1 = lerp(h10, h11, (worldTreeX + width/2.0) - x0);
                //         double h = lerp(h0, h1, (worldTreeZ + height/2.0) - z0);
-
-                        positionArray.append(MVector(worldTreeX, h, worldTreeZ));
+                        if (maxDepth > 0)
+                        {
+                            positionArray.append(MVector(worldTreeX, (float) h + (.25 * treeHeightOffset), worldTreeZ));
+                            }
+                        else {
+                            positionArray.append(MVector(worldTreeX, (float) h, worldTreeZ));
+                            }
+                        
                         rotationArray.append(MVector(xRot, 0, zRot)); // max rotation in either direction should be 5 degrees
                         scaleArray.append(MVector(treeHeightOffset * .25, treeHeightOffset * .9, treeHeightOffset * .25));
                       //  rotationArray.append(MVector(0, 0, 0));
@@ -334,12 +361,12 @@ void CIS660AuthoringToolNode::createPlane(int width, int height, double s)
         {
         for (x = -size / 2.0; x <= size / 2.0; x += wSize)
             {
-            // remap x and z from range [-size/2.0, size/2.0] to range [0,256]
-            double remapX = remap(x, (-size / 2.0), 0.0, (size / 2.0), 255.0);
-            double remapZ = remap(z, (-size / 2.0), 0.0, (size / 2.0), 255.0);
-            double y = lookUpHeight(remapX, remapZ);
-            FILL(x, y, z);
-            num_verts++;
+                // remap x and z from range [-size/2.0, size/2.0] to range [0,256]
+                double remapX = remap(x, (-size / 2.0), 0.0, (size / 2.0), 255.0);
+                double remapZ = remap(z, (-size / 2.0), 0.0, (size / 2.0), 255.0);
+                double y = lookUpHeight(remapX, remapZ);
+                FILL(x, y, z);
+                num_verts++;
             }
     }
 
@@ -418,9 +445,9 @@ double  CIS660AuthoringToolNode::lookUpHeight(double x, double z)
     int px = floor(x);
     int pz = floor(z);
 
-    double r = heightMap(px, pz, 0, 0);
-    double g = heightMap(px, pz, 0, 1);
-    double b = heightMap(px, pz, 0, 2);
+    int r = floor(heightMap(px, pz, 0, 0));
+    int g = floor(heightMap(px, pz, 0, 1));
+    int b = floor(heightMap(px, pz, 0, 2));
 
     double height = (.3 * r) + (.59 * g) + (.11 * b);
 
