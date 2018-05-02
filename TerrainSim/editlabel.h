@@ -23,7 +23,7 @@ public:
     ~EditLabel() { if(imgRef) imgRef = NULL; /* wild pointer, replace later */}
     void setImageData(QImage& image);
     void refreshImage();
-
+    QImage getFoliageExport();
     static ImageDataManipulator dataHandle;
     void setEditMode(EditMode m) { mode = m; }
 

@@ -63,7 +63,10 @@ bool ImageViewer::loadFile(const QString &fileName)
 {
     QImageReader reader(fileName);
     reader.setAutoTransform(true);
-    const QImage newImage = reader.read();
+    QImage newImage = reader.read();
+    qDebug()<< newImage.format();
+    newImage = newImage.convertToFormat(QImage::Format_RGB32);
+    qDebug()<< newImage.format();
     if (newImage.isNull()) {
         QMessageBox::information(this, QGuiApplication::applicationDisplayName(),
                                  tr("Cannot load %1: %2")
@@ -138,6 +141,8 @@ bool ImageViewer::saveFile(const QString &fileName)
 {
     QStringList l = fileName.split('.');
     QImageWriter writer(QString(l.at(0)).append("_height.").append(QString(l.at(1))));
+    writer.setFormat("bmp");
+    writer.setCompression(0);
 
     if (!writer.write(image)) {
         QMessageBox::information(this, QGuiApplication::applicationDisplayName(),
@@ -149,7 +154,13 @@ bool ImageViewer::saveFile(const QString &fileName)
     statusBar()->showMessage(message);
 
     QImageWriter writer2(QString(l.at(0)).append("_foliage.").append(QString(l.at(1))));
-    if (!writer2.write(image)) {
+    writer2.setFormat("bmp");
+    writer2.setCompression(0);
+
+    QImage imgTest = foliageLabel->getFoliageExport(); // slow
+    //imgTest.fill((255 << 24) + 5);
+
+    if (!writer2.write(imgTest)) {
         QMessageBox::information(this, QGuiApplication::applicationDisplayName(),
                                  tr("Cannot write %1: %2")
                                  .arg(QDir::toNativeSeparators(fileName)), writer2.errorString());
@@ -177,10 +188,12 @@ static void initializeImageFileDialog(QFileDialog &dialog, QFileDialog::AcceptMo
     foreach (const QByteArray &mimeTypeName, supportedMimeTypes)
         mimeTypeFilters.append(mimeTypeName);
     mimeTypeFilters.sort();
-    dialog.setMimeTypeFilters(mimeTypeFilters);
-    dialog.selectMimeTypeFilter("image/png");
+    //dialog.setMimeTypeFilters(mimeTypeFilters);
+    dialog.setNameFilter("Windows BMP Image (*.bmp *.dib)");
+    dialog.setDefaultSuffix(".bmp");
+    //dialog.selectMimeTypeFilter("image/bmp");
     if (acceptMode == QFileDialog::AcceptSave)
-        dialog.setDefaultSuffix("jpg");
+        dialog.setDefaultSuffix("bmp");
 }
 
 void ImageViewer::open()

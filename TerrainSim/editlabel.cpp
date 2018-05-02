@@ -27,7 +27,7 @@ void EditLabel::mouseEdit(float x, float y)
         if (mode == EditMode::terrain) {
             if(modAlt && modShift)
             {
-                EditLabel::dataHandle.brushPolish(x, y, brushRadius, .02);
+                EditLabel::dataHandle.brushPolish(x, y, brushRadius, .01f);
             } else if (modShift) {
                 EditLabel::dataHandle.brushFlatten(x, y, brushRadius, .02); // may need to change amt
             } else {
@@ -37,11 +37,22 @@ void EditLabel::mouseEdit(float x, float y)
 
 
         } else if (mode == EditMode::foliage) {
-
+            if(modShift) {
+                EditLabel::dataHandle.brushFoliageGrow(x, y, brushRadius, 0.1f);
+            } else {
+                EditLabel::dataHandle.brushFoliageAdd(x, y, brushRadius, 0.1f);
+            }
         }
-        EditLabel::dataHandle.refreshRegion(x, y, brushRadius);
+        if (mode == EditMode::terrain) EditLabel::dataHandle.refreshRegion(x, y, brushRadius);
+        else if (mode == EditMode::foliage) EditLabel::dataHandle.refreshRegion(x, y, brushRadius);
+
         refreshImage();
     }
+}
+
+QImage EditLabel::getFoliageExport()
+{
+    return EditLabel::dataHandle.exportFoliageImage();
 }
 
 void EditLabel::mousePressEvent(QMouseEvent *event)
@@ -91,6 +102,21 @@ void EditLabel::keyReleaseEvent(QKeyEvent *r)
                 EditLabel::dataHandle.phDoErosion(20000);
                 this->setPixmap(QPixmap::fromImage(*imgRef));
                 break;
+            case Qt::Key_F:
+                EditLabel::dataHandle.phDoEcosystem(256 * 256 * 5);
+                if (mode == EditMode::foliage) {
+                    this->setPixmap(QPixmap::fromImage(*imgRef));
+                }
+                break;
+            case Qt::Key_Y:
+                int years = 2;
+                for (int year = 0; year < years; ++year) {
+                    EditLabel::dataHandle.phDoEcosystem(262144);
+                    EditLabel::dataHandle.phDoErosion(16384);
+                    this->setPixmap(QPixmap::fromImage(*imgRef));
+                    qDebug()<< "Finished year " << (year + 1) << " of " << years;
+                }
+                break;
         }
     }
 }
@@ -103,5 +129,6 @@ void EditLabel::setImageData(QImage &image)
     } else if (mode == EditMode::foliage) {
         EditLabel::dataHandle.setFoliageRef(image);
         imgRef = &image;
+        this->refreshImage();
     }
 }

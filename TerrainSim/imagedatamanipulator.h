@@ -126,9 +126,9 @@ typedef struct plantParams {
     float waterMin;
     float waterMax;
     float growth(float water, float temp, float sun) {
-        float vw = clamp(-1.0f, 1.0f, (water - waterMin) / (waterMinIdeal - waterMin)) * clamp(-1.0f, 1.0f, (water - waterMaxIdeal) / (waterMax - waterMaxIdeal));
-        float vt = clamp(-1.0f, 1.0f, (temp - tempMin) / (tempMinIdeal - tempMin)) * clamp(-1.0f, 1.0f, (temp - tempMaxIdeal) / (tempMax - tempMaxIdeal));
-        float vs = clamp(-1.0f, 1.0f, (sun - sunMin) / (sunMinIdeal - sunMin)) * clamp(-1.0f, 1.0f, (sun - sunMaxIdeal) / (sunMax - sunMaxIdeal));
+        float vw = std::min(clamp(-1.0f, 1.0f, (water - waterMin) / (waterMinIdeal - waterMin)), clamp(-1.0f, 1.0f, (water - waterMax) / (waterMaxIdeal - waterMax)));
+        float vt = std::min(clamp(-1.0f, 1.0f, (temp - tempMin) / (tempMinIdeal - tempMin)), clamp(-1.0f, 1.0f, (temp - tempMax) / (tempMaxIdeal - tempMax)));
+        float vs = std::min(clamp(-1.0f, 1.0f, (sun - sunMin) / (sunMinIdeal - sunMin)), clamp(-1.0f, 1.0f, (sun - sunMax) / (sunMaxIdeal - sunMax)));
 
         return std::min(std::min(vw, vt), vs);
     }
@@ -148,9 +148,9 @@ typedef struct terrainCell {
 } terrainCell;
 
 typedef struct foliageCell {
-    foliageCell(): count(0), heightAvg(0.0f), ageSum(0.0f), density(0.0f) {}
+    foliageCell(): count(0), heightSum(0.0f), ageSum(0.0f), density(0.0f) {}
     int count;
-    float heightAvg;
+    float heightSum;
     float ageSum;
     float density;
 } foliageCell;
@@ -237,11 +237,27 @@ private:
     float normalStr = 4.0;
 
     bool rayMarch(vec2 uv, vec3 dir);
+    void densityRecalculate(foliageCell &fc);
 
     void recalculateSoilParameters();
     // TODO: replace
-    int maxPlantsPerCell = 10.0;
-    plantParams plant1 = plantParams(20.0f, 15.0f, 25.0f, 10.0f, 30.0f, 0.3f, 0.9f, 0.1f, 1.0f, 0.3f, 0.8f, 0.2f, 0.9f);
+    /*
+    plantParams(float agem,
+                float tmini, float tmaxi,
+                float tmin, float tmax,
+                float smini, float smaxi,
+                float smin, float smax,
+                float wmini, float wmaxi,
+                float wmin, float wmax):
+                */
+    int maxPlantsPerCell = 10;
+    plantParams plant1 = plantParams(20.f,
+                                     19.f, 25.f,
+                                     13.f, 30.f,
+                                     0.1f, 0.9f,
+                                     0.0f, 1.0f,
+                                     0.1f, 0.9f,
+                                     0.0f, 1.0f);
     heightTemp heightToTemp = heightTemp(33.0f, 8.0f); // 30c at 0 elevation, 10c at 1 elevation
 public:
     ImageDataManipulator();
@@ -249,9 +265,13 @@ public:
     ~ImageDataManipulator() {}
 
     void setFoliageRef(QImage& img);
+    QImage exportFoliageImage();
 
     void brushAdd(int x, int y, int r, float amt);
     void refreshRegion(int x, int y, int r);
+    void refreshFoliageRegion(int x, int y, int r);
+    void brushFoliageAdd(int x, int y, int r, float densityAddAmt);
+    void brushFoliageGrow(int x, int y, int r, float heightPerTree);
 
     void brushPolish(int x, int y, int r, float amt);
     void brushFlatten(int x, int y, int r, float amt);
@@ -265,6 +285,7 @@ public:
     void ecosystemEvent(int x, int y);
 
     void phDoErosion(int dropletCount);
+    void phDoEcosystem(int eventCount);
 };
 
 
