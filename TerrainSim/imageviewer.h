@@ -56,9 +56,12 @@ private:
     EditLabel *heightLabel;
     EditLabel *foliageLabel;
     QScrollArea *scrollArea;
+    QWidget *heightArea;
+    QWidget *foliageArea;
     double scaleFactor;
 
     QSlider *intensitySlider;
+    QSlider *sizeSlider;
 
 #ifndef QT_NO_PRINTER
     QPrinter printer;

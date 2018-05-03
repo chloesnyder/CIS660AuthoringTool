@@ -46,6 +46,35 @@ void ImageDataManipulator::IZC(uint64_t d, uint64_t *x, uint64_t *y)
 
 /// Sampling
 
+float ImageDataManipulator::bilinearDensity(std::vector<foliageCell> &map, vec2 pos)
+{
+    float fw = (float) width;
+    float fx = fw * pos.x;
+    float fy = fw * pos.y;
+
+    int x0 = (int) floor(fx);
+    int y0 = (int) floor(fy);
+    int x1 = x0 + 1;
+    int y1 = y0 + 1;
+
+    // coordinates in z curve space
+    uint64_t i00 = 0;
+    uint64_t i01 = 0;
+    uint64_t i10 = 0;
+    uint64_t i11 = 0;
+    ZC(x0, y0, &i00);
+    ZC(x1, y0, &i01);
+    ZC(x0, y1, &i10);
+    ZC(x1, y1, &i11);
+
+    float d0 = lerp(map[i00].density, map[i01].density, fx - x0);
+    float d1 = lerp(map[i10].density, map[i11].density, fx - x0);
+    float d = lerp(d0, d1, fy - y0);
+    d0 = lerp(map[i00].grassDensity, map[i01].grassDensity, fx - x0);
+    d1 = lerp(map[i10].grassDensity, map[i11].grassDensity, fx - x0);
+    return lerp(d, lerp(d0, d1, fy - y0), 0.25f);
+}
+
 float ImageDataManipulator::bilinear(std::vector<float> &map, vec2 pos)
 {
     float fw = (float) width;
@@ -264,9 +293,11 @@ QRgb ImageDataManipulator::foliageIndexToPixel(int x, int y)
     h = 0.5f * h + 0.5f;
     // 0.133, 0.545, 0.133
     vec3 green = {0.133f, 0.545f, 0.133f};
+    vec3 brown = {0.714f, 0.486f, 0.259f};
+    vec3 blend = lerp(brown, green, std::max(0.0f, f.grassDensity / (0.01f +f.grassDensity + f.density)));
     vec3 color = {h, h, h};
-    vec3 color2 = {h * green.x, h * green.y, h * green.z};
-    color = lerp(color, color2, std::min(1.0f, std::max(0.0f, f.density)));
+    vec3 color2 = {h * blend.x, h * blend.y, h * blend.z};
+    color = lerp(color, color2, std::min(1.0f, std::max(0.0f, std::max(f.grassDensity, f.density))));
     unsigned int r = (unsigned int) (255.0f * std::max(0.0f, std::min(1.0f, color.x)));
     unsigned int g = (unsigned int) (255.0f * std::max(0.0f, std::min(1.0f, color.y)));
     unsigned int b = (unsigned int) (255.0f * std::max(0.0f, std::min(1.0f, color.z)));
@@ -347,7 +378,6 @@ ImageDataManipulator::ImageDataManipulator(QImage& image)
 #endif
 
     this->imgRefHeight = &image;
-    qDebug()<<"Raymarching to find sunlight exposure";
 
     recalculateSoilParameters();
 
@@ -359,16 +389,19 @@ ImageDataManipulator::ImageDataManipulator(QImage& image)
 
 void ImageDataManipulator::recalculateSoilParameters()
 {
+    float elev = 0.40f * 3.14159f;
+    float se = std::sin(elev);
+    float ce = std::cos(elev);
+
+    qDebug()<<"Raymarching to find sunlight exposure";
+
     for (int i = 0; i < this->height; i++) {
         for (int j = 0; j < this->width; j++) {
             // raymarch to get average sun exposure
             vec2 uv = {(float) j / width, (float) i / width};
 
             int numHits = 0;
-            int numRays = 20;
-            float elev = 0.40f * 3.14159f;
-            float se = std::sin(elev);
-            float ce = std::cos(elev);
+            int numRays = 18;
 
             for (int ray = 0; ray < numRays; ray++) {
                 vec3 dir = {std::cos((float) ray / (float) numRays * 3.141f), 0.0f, 0.05f + std::sin((float) ray / (float) numRays * 3.141f)};
@@ -378,7 +411,7 @@ void ImageDataManipulator::recalculateSoilParameters()
                 if (hit) numHits++;
             }
 
-            float exposure = 1.f - (float)(numHits + 2) / (numRays + 4);
+            float exposure = 1.f - (float)(numHits + 1) / (numRays + 2);
             uint64_t idx = 0;
             ZC(j, i, &idx);
             soilData[idx].sunlight = exposure;
@@ -710,10 +743,10 @@ void ImageDataManipulator::setFoliageRef(QImage &img)
 void ImageDataManipulator::phDoErosion(int dropletCount)
 {
     dropletOptions params = dropletOptions();
-    params.kInertia = 0.04f;
+    params.kInertia = 0.03f;
     //params.kAccumulate = 0.75f;
     params.unitDist = 1.0f / (float) width;
-    float kGain = 8.0f;
+    float kGain = 4.0f;
 
     int kr = 3;
     int kl = 2 * (kr - 1) + 1;
@@ -739,7 +772,7 @@ void ImageDataManipulator::phDoErosion(int dropletCount)
     }
 
     for (int drop = 0; drop < dropletCount; ++drop) {
-        if (drop % 200 == 0) qDebug() << "making drop: " << drop << "\n";
+        if (drop % 1000 == 0) qDebug() << "erosion event: " << drop << "\n";
         float rx = ((float) rand() / (RAND_MAX));
         float ry = ((float) rand() / (RAND_MAX));
         //qDebug() << rx << ", " << ry << "\n";
@@ -748,11 +781,8 @@ void ImageDataManipulator::phDoErosion(int dropletCount)
         vec2 dir = bilinear(gradientData, p);
         droplet.currentHeight = bilinear(heightData, p);
         droplet.changeDirection(dir);
-        //qDebug() << "Dir: " << droplet.dir.x << ", " << droplet.dir.y << "\n";
 
-
-        int backup = 60;
-        while (!droplet.isDead()) {
+        for (int st = 0; st < 100 && !droplet.isDead(); ++st) {
             bilinearRepair(p);
 
             droplet.move();
@@ -761,9 +791,13 @@ void ImageDataManipulator::phDoErosion(int dropletCount)
             float h0 = droplet.currentHeight;
             vec2 p1 = {droplet.dir.x * droplet.params.unitDist + droplet.x, droplet.dir.y * droplet.params.unitDist + droplet.y};
             float h1 = bilinear(heightData, p1);
+            float dens = bilinearDensity(foliageData, p1);
             float hdif = h1 - h0;
+            // plant interference w/ erosion:
+            // shrink the slope if downhill, grow if uphill
+            hdif *= (hdif > 0.0f ? 1.f - dens : 1.f + dens);
 
-            float c = std::max(0.025f, -hdif) * std::max(droplet.speed, 0.01f) * droplet.water * kGain;
+            float c = std::max(0.03f, -hdif) * std::max(droplet.speed, 0.01f) * droplet.water * kGain;
 
             if (hdif > 0.0f) {
                 // deposit everything needed to fill pit
@@ -864,9 +898,12 @@ void ImageDataManipulator::ecosystemEvent(int x, int y)
     float count = fc.count;
     float density = fc.density;
     float penaltyDensity = std::exp(-density);
+    float penaltyResources = std::exp(-density - fc.grassDensity);
     // determine -1 to 1 measure of plant viability here
     // density blocks some sunlight
-    float viability = plant1.growth(tc.moisture, temp, tc.sunlight * std::exp(-density));
+    float viability = plant1.growth(tc.moisture * penaltyResources, temp, tc.sunlight * penaltyDensity);
+    // grass has harder time growing under dense foliage
+    float viabilityGrass = grass.growth(tc.moisture * penaltyResources, temp, tc.sunlight * penaltyDensity);
 
     // determine new number of plants
     int newPlants = (int) std::floor(std::max(0.0f, 2.5f * viability));
@@ -878,35 +915,42 @@ void ImageDataManipulator::ecosystemEvent(int x, int y)
     dyingPlants += (int) (0.5f * std::max(0.f, ((float) rand() / (RAND_MAX) - penaltyDensity) * (count - dyingPlants))); // density based
 
     int newCount = count + newPlants - dyingPlants;
+
     if (newCount > maxPlantsPerCell) {
+
         dyingPlants += (newCount - maxPlantsPerCell);
         newCount = maxPlantsPerCell;
+
     }
     if (newCount <= 0) {
+
         fc.count = 0;
         fc.density = 0.0f;
         fc.ageSum = 0.0f;
         fc.heightSum = 0.0f;
-        foliageData[idx] = fc;
+
     } else if (count == 0) {
+
         fc.heightSum = 0.1f * newCount;
         fc.density = fc.heightSum / (float) maxPlantsPerCell;
         fc.ageSum = 0.0f;
         fc.count = newCount;
-        foliageData[idx] = fc;
+
     } else {
+
         float avgHeight = fc.heightSum / (float) (count);
         // add some penalty for dying plants
         float avgHNew = (fc.heightSum - avgHeight * dyingPlants) / (float) (count - dyingPlants);
         float hNew = avgHNew * (count - dyingPlants);
         if (viability >= 0.0f) {
+            // grow existing plants
             avgHNew += 0.05f * std::max(0.0f, viability);
             hNew = avgHNew * (count - dyingPlants) + 0.1f * newPlants;
         }
         float dNew = hNew / (float) maxPlantsPerCell;
+
         // force a plant to die and penalize the rest, prevent convergence
         if (dNew > 1.0f) {
-
             newCount = maxPlantsPerCell - 1;
             hNew = newCount * 0.95;
             dNew = hNew / maxPlantsPerCell;
@@ -914,17 +958,17 @@ void ImageDataManipulator::ecosystemEvent(int x, int y)
         fc.density = dNew;
         fc.count = newCount;
         fc.heightSum = hNew;
-        foliageData[idx] = fc;
-    }
-    // TODO: final # of plants
-    // TODO: plant height
 
+    }
+    // if grass viability is low but above zero some will still die
+    fc.grassDensity = saturate(fc.grassDensity + 0.05f * (viabilityGrass - 0.2f));
+    foliageData[idx] = fc;
 }
 
 void ImageDataManipulator::phDoEcosystem(int eventCount)
 {
     for (int evt = 0; evt < eventCount; ++evt) {
-        if (evt % 200 == 0) qDebug() << "making event: " << evt << "\n";
+        if (evt % 1000 == 0) qDebug() << "ecosystem event: " << evt << "\n";
         float rx = ((float) rand() / (RAND_MAX));
         float ry = ((float) rand() / (RAND_MAX));
         int px = std::floor(rx * width);
@@ -932,6 +976,86 @@ void ImageDataManipulator::phDoEcosystem(int eventCount)
         ecosystemEvent(px, py);
     }
 
+    refreshFoliageImage();
+}
+
+void ImageDataManipulator::phDoFires(int eventCount)
+{
+    for (int evt = 0; evt < eventCount; ++evt) {
+        if (evt % 1000 == 0) qDebug() << "fire event: " << evt << "\n";
+        float rx = ((float) rand() / (RAND_MAX));
+        float ry = ((float) rand() / (RAND_MAX));
+        int px = std::floor(rx * width);
+        int py = std::floor(ry * width);
+
+        uint64_t idx = 0;
+        ZC(px, py, &idx);
+
+        float currHeight = heightData[idx];
+
+        int maxSteps = 20;
+        float strength = 0.25f * ((float) rand() / (RAND_MAX));
+        float decay = 0.15f;
+        int chIdx = 2;
+        for (int step = 0; step < maxSteps; ++step) {
+
+            // move to a new cell
+            ZC(px, py, &idx);
+
+            float h = heightData[idx];
+            if (std::abs(h - currHeight) > 0.1f) break; // big height discontinuity
+            currHeight = h;
+            foliageCell fc = foliageData[idx];
+
+
+            // if the amount is below a threshold there isnt enough fuel
+            if (fc.density + fc.grassDensity < 0.1f) break;
+            // determine how much of the foliage must die
+            float fuel = (fc.density + fc.grassDensity) * 0.1f;
+
+            // kill pct grass
+            fc.grassDensity = fc.grassDensity * (1.0 - strength);
+
+            // kill pct plants
+            float avgHeight = fc.heightSum / (std::max(1.f, (float) fc.count));
+            int newCount = std::round(fc.count * (1.0 - strength));
+            if (newCount <= 0) {
+                fc.count = 0;
+                fc.heightSum = 0.f;
+                fc.density = 0.f;
+            } else {
+                fc.count = newCount;
+                fc.heightSum = avgHeight * newCount;
+                fc.density = fc.heightSum / (float) maxPlantsPerCell;
+            }
+
+
+            float rc = ((float) rand() / (RAND_MAX));
+            int shift = std::floor(rc * 3.f) + 1;
+            chIdx = (chIdx - 2 + shift); // never return in the same dir
+            chIdx = chIdx > 0 ? chIdx % 4 : chIdx + 4;
+            switch(chIdx) {
+                case 0:
+                    px -= 1;
+                    break;
+                case 1:
+                    py -= 1;
+                    break;
+                case 2:
+                    px += 1;
+                    break;
+                case 3:
+                    py += 1;
+                    break;
+             }
+
+            foliageData[idx] = fc;
+            strength *= (1.f - decay + fuel);
+            if (px <= 0 || px >= width) break;
+            if (py <= 0 || py >= width) break;
+            if (strength < 0.01f) break;
+        }
+    }
     refreshFoliageImage();
 }
 
@@ -951,13 +1075,18 @@ QImage ImageDataManipulator::exportFoliageImage()
             // average 0 to 1 height as green
             color += std::min((int) (255.0f * fc.heightSum / (float) fc.count), 255) << 8;
 
-            // blue is unused
-            color += (int) std::round(255.0f * tc.moisture);
+            // blue is grass
+            color += (int) std::round(255.0f * fc.grassDensity);
             img.setPixelColor(j, i, color);
         }
     }
 
     return img; // pass by value!!!
+}
+
+void ImageDataManipulator::simRefresh()
+{
+    recalculateSoilParameters();
 }
 
 /// Droplet Stuff

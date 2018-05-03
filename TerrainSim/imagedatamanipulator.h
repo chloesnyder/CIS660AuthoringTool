@@ -148,15 +148,16 @@ typedef struct terrainCell {
 } terrainCell;
 
 typedef struct foliageCell {
-    foliageCell(): count(0), heightSum(0.0f), ageSum(0.0f), density(0.0f) {}
+    foliageCell(): count(0), heightSum(0.0f), ageSum(0.0f), density(0.0f), grassDensity(0.0f) {}
     int count;
     float heightSum;
     float ageSum;
     float density;
+    float grassDensity;
 } foliageCell;
 
 typedef struct dropletOptions {
-    dropletOptions(): kInertia(0.f), kGrav(0.01f), kEvap(0.02f), kDeposit(0.1f), kAccumulate(0.1f), steps(100), unitDist(1.f / 256.f) {}
+    dropletOptions(): kInertia(0.f), kGrav(0.01f), kEvap(0.02f), kDeposit(0.03f), kAccumulate(0.15f), steps(100), unitDist(1.f / 256.f) {}
     float kInertia;
     float kGrav;
     float kEvap;
@@ -254,9 +255,16 @@ private:
     plantParams plant1 = plantParams(20.f,
                                      19.f, 25.f,
                                      13.f, 30.f,
-                                     0.1f, 0.9f,
+                                     0.2f, 0.9f,
                                      0.0f, 1.0f,
-                                     0.1f, 0.9f,
+                                     0.3f, 0.6f,
+                                     0.0f, 1.0f);
+    plantParams grass = plantParams(20.f,
+                                     22.f, 30.f,
+                                     18.f, 35.f,
+                                     0.4f, 0.95f,
+                                     0.0f, 1.0f,
+                                     0.45f, 0.9f,
                                      0.0f, 1.0f);
     heightTemp heightToTemp = heightTemp(33.0f, 8.0f); // 30c at 0 elevation, 10c at 1 elevation
 public:
@@ -264,7 +272,7 @@ public:
     ImageDataManipulator(QImage& image);
     ~ImageDataManipulator() {}
 
-    void setFoliageRef(QImage& img);
+    void setFoliageRef(QImage &img);
     QImage exportFoliageImage();
 
     void brushAdd(int x, int y, int r, float amt);
@@ -280,12 +288,16 @@ public:
     float bilinear(std::vector<float> &map, vec2 pos);
     vec2 bilinear(std::vector<vec2> &map, vec2 pos);
     vec3 bilinear(std::vector<vec3> &map, vec2 pos);
+    float bilinearDensity(std::vector<foliageCell> &map, vec2 pos);
 
     float bilinearAdd(std::vector<float> &map, vec2 pos, float amt);
     void ecosystemEvent(int x, int y);
 
     void phDoErosion(int dropletCount);
     void phDoEcosystem(int eventCount);
+    void phDoFires(int eventCount);
+
+    void simRefresh();
 };
 
 

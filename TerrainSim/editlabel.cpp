@@ -99,21 +99,31 @@ void EditLabel::keyReleaseEvent(QKeyEvent *r)
                 modShift = false;
                 break;
             case Qt::Key_E:
-                EditLabel::dataHandle.phDoErosion(20000);
+                EditLabel::dataHandle.phDoErosion(32768);
                 this->setPixmap(QPixmap::fromImage(*imgRef));
                 break;
             case Qt::Key_F:
-                EditLabel::dataHandle.phDoEcosystem(256 * 256 * 5);
+                EditLabel::dataHandle.phDoEcosystem(262144);
                 if (mode == EditMode::foliage) {
                     this->setPixmap(QPixmap::fromImage(*imgRef));
                 }
                 break;
+            case Qt::Key_K:
+                EditLabel::dataHandle.phDoFires(8192);
+                this->setPixmap(QPixmap::fromImage(*imgRef));
+                break;
             case Qt::Key_Y:
                 int years = 2;
                 for (int year = 0; year < years; ++year) {
-                    EditLabel::dataHandle.phDoEcosystem(262144);
+                    EditLabel::dataHandle.phDoEcosystem(131072);
                     EditLabel::dataHandle.phDoErosion(16384);
+                    EditLabel::dataHandle.phDoFires(4096);
                     this->setPixmap(QPixmap::fromImage(*imgRef));
+                    EditLabel::dataHandle.simRefresh(); // recalculate info like soil
+                    EditLabel::dataHandle.phDoEcosystem(131072);
+                    EditLabel::dataHandle.phDoErosion(16384);
+                    EditLabel::dataHandle.phDoFires(4096);
+                    EditLabel::dataHandle.simRefresh();
                     qDebug()<< "Finished year " << (year + 1) << " of " << years;
                 }
                 break;
