@@ -266,7 +266,14 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
                         float worldTreeX = remap(px + percentX, 0.0, -size / 2.0, 255.0, size / 2.0);
                         float worldTreeZ = remap(pz + percentZ, 0.0, -size / 2.0, 255.0, size / 2.0);
 
-                        positionArray.append(MVector(worldTreeX, (float) h, worldTreeZ));
+                        if (maxDepth > 0)
+                            {
+                            positionArray.append(MVector(worldTreeX, (float) h + (.25 * treeHeightOffset), worldTreeZ));
+                            }
+                        else {
+                            positionArray.append(MVector(worldTreeX, (float) h, worldTreeZ));
+                            }
+                        
                         rotationArray.append(MVector(xRot, 0, zRot)); // max rotation in either direction should be 5 degrees
                         scaleArray.append(MVector(treeHeightOffset * .75, treeHeightOffset * .9, treeHeightOffset * .75));
                         idArray.append(i);
@@ -402,12 +409,12 @@ std::vector<double> CIS660AuthoringToolNode::lookUpFoliageBChannel(double x, dou
     color.reserve(3);
 
     if (foliageMap.is_empty())
-        {
+    {
             color.push_back(0.0);
             color.push_back(1.0);
             color.push_back(0.0);
              return color;
-        }
+    }
 
     //bilinear interpolation for height
 
