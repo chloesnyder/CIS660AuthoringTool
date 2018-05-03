@@ -1,8 +1,15 @@
 ﻿  CIS660AuthoringToolNode.cpp
-CIS660AuthoringToolNode.cpp(199): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-CIS660AuthoringToolNode.cpp(368): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-CIS660AuthoringToolNode.cpp(369): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-  PluginMain.cpp
-  Generating Code...
+CIS660AuthoringToolNode.cpp(189): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(261): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+CIS660AuthoringToolNode.cpp(262): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+CIS660AuthoringToolNode.cpp(404): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(405): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(419): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(420): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(445): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(446): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(448): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(449): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+CIS660AuthoringToolNode.cpp(450): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
      Creating library Release\CIS660AuthoringTool.lib and object Release\CIS660AuthoringTool.exp
   CIS660AuthoringTool.vcxproj -> C:\Users\SIG\Documents\GitHub\CIS660AuthoringTool\CIS660AuthoringTool\CIS660AuthoringTool\Release\CIS660AuthoringTool.mll

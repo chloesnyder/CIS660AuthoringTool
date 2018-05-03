@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4becf81a-1eed-48c1-8986-b52c63e97a48}</UniqueIdentifier>
+      <Extensions>cpp</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{c5bb0946-7f6c-4ced-8ff0-69affcc3e0ea}</UniqueIdentifier>
+      <Extensions>h</Extensions>
+    </Filter>
+    <Filter Include="Miscellaneous Files">
+      <UniqueIdentifier>{10721b99-3da3-42ef-9881-8a68f3907a36}</UniqueIdentifier>
+      <Extensions>txt</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt">
+      <Filter>Miscellaneous Files</Filter>
+    </Text>
+    <Text Include="Options.txt">
+      <Filter>Miscellaneous Files</Filter>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pluginMain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CIS660AuthoringToolNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="CIS660AuthoringToolNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

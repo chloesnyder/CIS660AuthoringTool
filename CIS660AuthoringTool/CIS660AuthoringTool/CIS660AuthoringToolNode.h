@@ -39,6 +39,8 @@ using namespace cimg_library;
                 return MS::kFailure;    \
         }
 
+inline double lerp(double a, double b, double t) { return t * b + (1.f - t) * a; }
+
 class CIS660AuthoringToolNode : public MPxNode
 {
     public:
@@ -50,16 +52,14 @@ class CIS660AuthoringToolNode : public MPxNode
 
         static MTypeId id;
         static MObject time;
-        static MObject width;
-        static MObject height;
+        static MObject treeHeight;
         static MObject mindepth;
         static MObject maxdepth;
         static MObject hpath;
-        static MObject size;
+        static MObject fpath;
         static MObject outputMesh;
 
         static MObject outPoints;
-        static MObject inNumPoints;
 
         // Poly primitive
         int num_verts;                  // Number of vertices of polygon
@@ -75,13 +75,17 @@ class CIS660AuthoringToolNode : public MPxNode
 
         MFnMesh fnPoly;
         CImg<float> heightMap;
+        CImg<float> foliageMap;
 
         void FILL(double x, double y, double z);
         double lookUpHeight(double x, double z);
         double remap(double value, double low1, double low2, double high1, double high2);
 
+        double lookUpFoliageRChannel(double x, double z);
+        double lookUpFoliageGChannel(double x, double z);
+
         double minDepth = 0;
-        double maxDepth = 100;
+        double maxDepth = 0;
 
         MObject newTransform;
         MDGModifier dgModifier;
@@ -89,8 +93,6 @@ class CIS660AuthoringToolNode : public MPxNode
     protected:
         MObject createMesh(const MTime& time, const int& width, const int& height, const double& s, 
                            const double& min_depth, const double& max_depth, const MString& heightPath, MObject& outData, MStatus& stat);
-  /*      MObject createInstancesOfObject(const MTime& time, const int& width, const int& height, const double& s,
-                                        const double& min_depth, const double& max_depth, const int& in_num_points, const MPlug& plug, MDataBlock& data, MStatus& stat);*/
     
     private:
         void createPlane(int width, int height, double s);
