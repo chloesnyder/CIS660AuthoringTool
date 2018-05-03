@@ -154,9 +154,47 @@ MStatus CIS660AuthoringToolNode::compute(const MPlug& plug, MDataBlock& data)
         MObject newOutputData = dataCreator.create(&returnStatus);
         McheckErr(returnStatus, "ERROR creating outputData");
         // mesh creation
+        vertexColors = std::vector<std::vector<double>>();
         createMesh(timeVal, 256, 256, 256, minDepthVal, maxDepthVal, heightPathVal, newOutputData, returnStatus);
         McheckErr(returnStatus, "ERROR creating mesh");
+
+        // set up color stuff
+   /*     vertexColorList = MColorArray();
+        normalsList = MFloatVectorArray();
+        fnPoly.getVertexColors(vertexColorList);
+        fnPoly.getNormals(normalsList);
+        int lenVertexList = pa.length();
+
+        MFnSingleIndexedComponent fnComponent;
+        MObject fullComponent = fnComponent.create(MFn::kMeshVertComponent);
+        fnComponent.setCompleteData(lenVertexList);
+        MIntArray vertexIndexList = MIntArray();
+        fnComponent.getElements(vertexIndexList);
+        for (int i = 0; i < lenVertexList; i++)
+            {
+                vertexColorList[i].r = 1.0;
+                vertexColorList[i].g = 0.0;
+                vertexColorList[i].b = 0.0;
+            }
+        fnPoly.setVertexColors(vertexColorList, vertexIndexList);*/
+
+        MColorArray colors;
+        MIntArray vertex_idx;
+        for (int i = 0; i < iarr.length(); i++)
+            {
+           // colors.append(MColor(1.0, 0.0, 0.0));
+            std::vector<double> c = vertexColors.at(i);
+            colors.append(MColor(c.at(0), c.at(1), c.at(2)));
+            vertex_idx.append(i);
+            }
+
+        fnPoly.setVertexColors(colors, vertex_idx);
+
+
         outputHandle.set(newOutputData);
+       
+
+
         data.setClean(plug);
 
         MDataHandle pointsData = data.outputValue(outPoints, &returnStatus);
@@ -257,6 +295,10 @@ void CIS660AuthoringToolNode::FILL(double x, double  y, double z)
 
 void CIS660AuthoringToolNode::createPlane(int width, int height, double s)
     {
+
+    std::vector<double> currCol = std::vector<double>();
+
+
     // pass in a paramter of size
     int w = width;
     int h = height;
@@ -288,6 +330,11 @@ void CIS660AuthoringToolNode::createPlane(int width, int height, double s)
             double remapZ = remap(z + .5, (-size / 2.0), 0.0, (size / 2.0), 255.0);
             double y = lookUpHeight(remapX, remapZ);
             FILL(x, y, z);
+
+            // assign a color
+            currCol = lookUpFoliageBChannel(remapX, remapZ);
+            vertexColors.push_back(currCol);
+
             num_verts++;
             }
         }
@@ -347,6 +394,50 @@ double CIS660AuthoringToolNode::lookUpFoliageGChannel(double x, double z)
     double remapG = remap(g, 0.0, 0.0, 255.0, 1.0);
     return remapG;
 
+    }
+
+std::vector<double> CIS660AuthoringToolNode::lookUpFoliageBChannel(double x, double z)
+    {
+    std::vector<double> color;
+    color.reserve(3);
+
+    if (foliageMap.is_empty())
+        {
+            color.push_back(0.0);
+            color.push_back(1.0);
+            color.push_back(0.0);
+             return color;
+        }
+
+    //bilinear interpolation for height
+
+    int x0 = floor(x);
+    if (x0 < 0) x = 0;
+    int x1 = x0 + 1;
+    if (x1 > 255) x1 = 255;
+    int z0 = floor(z);
+    if (z0 < 0) z = 0;
+    int z1 = z0 + 1;
+    if (z1 > 255) z = 255;
+
+    double b00 = foliageMap(x0, z0, 0, 2) / 256.0;
+    double b01 = foliageMap(x0, z1, 0, 2) / 256.0;
+    double b10 = foliageMap(x1, z0, 0, 2) / 256.0;
+    double b11 = foliageMap(x1, z1, 0, 2) / 256.0;
+           
+    double b0 = lerp(b00, b01, z - z0);
+    double b1 = lerp(b10, b11, z - z0);
+    double b = lerp(b0, b1, x - x0);
+
+    double red = lerp(36.0/256.0, 94.0/256.0, 1.0 - b);
+    double green = lerp(86.0/256.0, 47.0/256.0, 1.0 - b);
+    double blue = lerp(47.0/256.0, 0.0/256.0, 1.0 -b);
+
+    color.push_back(red);
+    color.push_back(green);
+    color.push_back(blue);
+
+    return color;
     }
 
 double CIS660AuthoringToolNode::remap(double value, double low1, double low2, double high1, double high2)

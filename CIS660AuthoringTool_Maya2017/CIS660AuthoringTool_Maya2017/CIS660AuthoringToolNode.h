@@ -19,6 +19,8 @@
 #include <maya/MDataBlock.h>
 #include <maya/MFnMeshData.h>
 #include <maya/MIOStream.h>
+#include <maya/MFloatVectorArray.h>
+#include <maya/MFnSingleIndexedComponent.h>
 
 #include <maya/MFnArrayAttrsData.h>
 #include <map>
@@ -73,6 +75,9 @@ class CIS660AuthoringToolNode : public MPxNode
         MIntArray faceCounts;
         MIntArray faceConnects;
 
+        MColorArray vertexColorList;
+        MFloatVectorArray normalsList;
+
         MFnMesh fnPoly;
         CImg<float> heightMap;
         CImg<float> foliageMap;
@@ -85,6 +90,9 @@ class CIS660AuthoringToolNode : public MPxNode
 
         double lookUpFoliageRChannel(double x, double z);
         double lookUpFoliageGChannel(double x, double z);
+        std::vector<double> lookUpFoliageBChannel(double x, double z);
+        std::vector < std::vector<double>> vertexColors;
+
 
         double minDepth;// = 0;
         double maxDepth;// = 0;
