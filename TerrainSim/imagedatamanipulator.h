@@ -278,7 +278,7 @@ public:
     void brushAdd(int x, int y, int r, float amt);
     void refreshRegion(int x, int y, int r);
     void refreshFoliageRegion(int x, int y, int r);
-    void brushFoliageAdd(int x, int y, int r, float densityAddAmt);
+    void brushGrassGrow(int x, int y, int r, float densityAddAmt);
     void brushFoliageGrow(int x, int y, int r, float heightPerTree);
 
     void brushPolish(int x, int y, int r, float amt);

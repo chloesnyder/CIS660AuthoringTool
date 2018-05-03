@@ -442,58 +442,27 @@ void ImageDataManipulator::densityRecalculate(foliageCell &fc) {
     fc.density = dN;
 }
 
-void ImageDataManipulator::brushFoliageAdd(int x, int y, int r, float densityAddAmt)
-{
-    // fairly arbitrary here
+
+void ImageDataManipulator::brushGrassGrow(int x, int y, int r, float densityAddAmt) {
     float kr = std::max((float) r - 1.0, 1.0);
     for (int i = 1 - r; i < r; i++) {
         for (int j = 1 - r; j < r; j++) {
             int px = pxClamp(x + j);
             int py = pxClamp(y + i);
-
-            float dist = std::sqrt((float)(j * j + i * i));
-            dist = saturate(1.0 - dist / kr);
-            if (dist <= 0.001f) continue; // 0 strength
-
             uint64_t idx = 0;
             ZC((uint64_t) px,(uint64_t)  py, &idx);
             foliageCell fc = foliageData[idx];
+            float dist = std::sqrt((float)(j * j + i * i));
+            dist = saturate(1.0 - dist / kr);
 
-            if (fc.density == 1.0f) continue;
-
-            if (fc.count == 0) fc.count = 1;
-
-            float current = fc.density;
-            float target = std::min(1.0f, current + densityAddAmt * dist);
-            float delta = target - fc.density;
-
-            // density = #trees * (0 to 1 avg height) / #maxTrees
-            // density / avgheight = trees / maxtrees
-            // avgheight / density = maxtrees / trees
-            // avgheight = density * maxtrees / trees
-            // increase the density by some combination of adding trees and growing existing ones
-            int count = fc.count;
-            float deltaPer = maxPlantsPerCell * delta / count;
-            float maxDeltaPer = 0.25f;
-            // min number of trees to ensure no tree can grow over 1/4 in one iteration
-            if (deltaPer > maxDeltaPer) {
-                int minCount = (int) std::ceil(maxPlantsPerCell * delta / maxDeltaPer);
-                count = minCount;
-                deltaPer = maxPlantsPerCell * delta / count;
-            }
-
-            float deltaHeight = deltaPer * count;
-            fc.count = count;
-            fc.density = target;
-            fc.heightSum += deltaHeight;
-
-            //densityRecalculate(fc);
+            // say a tree has a minimum height of 0.0, max height of 1.0
+            fc.grassDensity = saturate(fc.grassDensity + dist * densityAddAmt);
 
             foliageData[idx] = fc;
-
         }
     }
 }
+
 
 void ImageDataManipulator::brushFoliageGrow(int x, int y, int r, float heightPerTree) {
     float kr = std::max((float) r - 1.0, 1.0);

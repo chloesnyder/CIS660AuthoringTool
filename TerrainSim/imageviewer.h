@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QImage>
 #include <QHBoxLayout>
+#include <QGridLayout>
 #include <qtabwidget.h>
 #include <imagedatamanipulator.h>
 #ifndef QT_NO_PRINTER
@@ -27,6 +28,11 @@ public:
     bool loadFile(const QString &);
     void refreshImage();
 
+
+signals:
+    void radiusChanged(int value);
+    void intensityChanges(int value);
+
 private slots:
     void open();
     void saveAs();
@@ -37,9 +43,10 @@ private slots:
     void normalSize();
     void fitToWindow();
     void about();
+    void setIntensity(int value);
+    void setRadius(int value);
 
 private:
-
 
     void createActions();
     void createMenus();
@@ -56,10 +63,13 @@ private:
     EditLabel *heightLabel;
     EditLabel *foliageLabel;
     QScrollArea *scrollArea;
-    QWidget *heightArea;
-    QWidget *foliageArea;
+
     double scaleFactor;
 
+    QWidget *dummy1;
+    QWidget *dummy2;
+    QGridLayout *layout2;
+    QGridLayout *layout1;
     QSlider *intensitySlider;
     QSlider *sizeSlider;
 

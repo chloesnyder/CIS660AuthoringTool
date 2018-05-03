@@ -27,20 +27,20 @@ void EditLabel::mouseEdit(float x, float y)
         if (mode == EditMode::terrain) {
             if(modAlt && modShift)
             {
-                EditLabel::dataHandle.brushPolish(x, y, brushRadius, .01f);
+                EditLabel::dataHandle.brushPolish(x, y, brushRadius, brushIntensity * .05f);
             } else if (modShift) {
-                EditLabel::dataHandle.brushFlatten(x, y, brushRadius, .02); // may need to change amt
+                EditLabel::dataHandle.brushFlatten(x, y, brushRadius, brushIntensity * .1f);
             } else {
                 // if shift not pressed, then additive or subtractive based on modAlt
-                EditLabel::dataHandle.brushAdd(x, y, brushRadius, (modAlt ? -0.01 : 0.01));
+                EditLabel::dataHandle.brushAdd(x, y, brushRadius, brushIntensity * (modAlt ? -0.05f : 0.05f));
             }
 
 
         } else if (mode == EditMode::foliage) {
             if(modShift) {
-                EditLabel::dataHandle.brushFoliageGrow(x, y, brushRadius, 0.1f);
+                EditLabel::dataHandle.brushFoliageGrow(x, y, brushRadius, brushIntensity * 0.25f);
             } else {
-                EditLabel::dataHandle.brushFoliageAdd(x, y, brushRadius, 0.1f);
+                EditLabel::dataHandle.brushGrassGrow(x, y, brushRadius, brushIntensity * (modAlt ? -0.05f : 0.05f));
             }
         }
         if (mode == EditMode::terrain) EditLabel::dataHandle.refreshRegion(x, y, brushRadius);

@@ -14,6 +14,7 @@ private:
     QImage *imgRef = NULL;
     bool mouseDown = false;
     int brushRadius = 10;
+    float brushIntensity = 0.1f;
     bool modAlt = false; // alt held down
     bool modShift = false; // shift held down
     EditMode mode = EditMode::terrain;
@@ -28,6 +29,7 @@ public:
     void setEditMode(EditMode m) { mode = m; }
 
     void setBrushRadius(int r) { brushRadius = std::max(1, r); }
+    void setBrushIntensity(float i) { brushIntensity = std::max(0.f, std::min(1.f, i)); }
 signals:
     void mouseEvent(float x, float y);
 public slots:

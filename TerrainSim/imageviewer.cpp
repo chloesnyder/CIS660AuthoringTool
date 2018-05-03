@@ -20,6 +20,7 @@ ImageViewer::ImageViewer()
     heightLabel->setMouseTracking(true);
     heightLabel->setAlignment(Qt::AlignCenter);
     heightLabel->setEditMode(EditMode::terrain);
+    heightLabel->setFocusPolicy(Qt::StrongFocus);
 
     foliageLabel->setBackgroundRole(QPalette::Base);
     foliageLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
@@ -27,10 +28,22 @@ ImageViewer::ImageViewer()
     foliageLabel->setMouseTracking(true);
     foliageLabel->setAlignment(Qt::AlignCenter);
     foliageLabel->setEditMode(EditMode::foliage);
+    foliageLabel->setFocusPolicy(Qt::StrongFocus);
+
+    dummy1 = new QWidget();
+    layout1 = new QGridLayout();
+    dummy1->setLayout(layout1);
+    layout1->addWidget(heightLabel);
+
+    dummy2 = new QWidget();
+    layout2 = new QGridLayout();
+    dummy2->setLayout(layout2);
+    layout2->addWidget(foliageLabel);
 
     imageTabs = new QTabWidget();
-    imageTabs->addTab(heightLabel, tr("Height Editor"));
-    imageTabs->addTab(foliageLabel, tr("Foliage Editor"));
+    imageTabs->addTab(dummy1, tr("Height Editor"));
+    imageTabs->addTab(dummy2, tr("Foliage Editor"));
+
     central = new QWidget();
     layout = new QHBoxLayout(central);
     layout->addWidget(imageTabs);
@@ -38,10 +51,11 @@ ImageViewer::ImageViewer()
     intensitySlider = new QSlider(Qt::Vertical); // central
     intensitySlider->setFocusPolicy(Qt::StrongFocus);
     intensitySlider->setTickPosition(QSlider::TicksBothSides);
-    intensitySlider->setTickInterval(10); // min value = .01, max value = .1
+    intensitySlider->setTickInterval(25); // min value = .01, max value = .1
     intensitySlider->setSingleStep(1);
-    intensitySlider->setMinimum(1);
+    intensitySlider->setMinimum(0);
     intensitySlider->setMaximum(100);
+    intensitySlider->setValue(25);
     intensitySlider->adjustSize();
 
     layout->addWidget(intensitySlider);
@@ -49,27 +63,40 @@ ImageViewer::ImageViewer()
     sizeSlider = new QSlider(Qt::Vertical); // central
     sizeSlider->setFocusPolicy(Qt::StrongFocus);
     sizeSlider->setTickPosition(QSlider::TicksBothSides);
-    sizeSlider->setTickInterval(2); // min value = .01, max value = .1
+    sizeSlider->setTickInterval(5); // min value = .01, max value = .1
     sizeSlider->setSingleStep(1);
-    sizeSlider->setMinimum(1);
-    sizeSlider->setMaximum(20);
+    sizeSlider->setMinimum(0);
+    sizeSlider->setMaximum(30);
+    sizeSlider->setValue(10);
     sizeSlider->adjustSize();
 
     layout->addWidget(sizeSlider);
+    connect(sizeSlider, SIGNAL(valueChanged(int)), this, SLOT(setRadius(int)));
+    connect(intensitySlider, SIGNAL(valueChanged(int)), this, SLOT(setIntensity(int)));
 
-
-    scrollArea->setBackgroundRole(QPalette::Dark);
+    scrollArea->setBackgroundRole(QPalette::Light);
     scrollArea->setWidget(central);
     scrollArea->setVisible(false);
     setCentralWidget(scrollArea);
-
-
 
     createActions();
 
     resize(QGuiApplication::primaryScreen()->availableSize() * 3 / 5);
 }
 
+void ImageViewer::setRadius(int value)
+{
+    value = std::max(1, value);
+    foliageLabel->setBrushRadius(value);
+    heightLabel->setBrushRadius(value);
+}
+
+void ImageViewer::setIntensity(int value)
+{
+    float v = (float) value / 100.0f;
+    foliageLabel->setBrushIntensity(v);
+    heightLabel->setBrushIntensity(v);
+}
 
 bool ImageViewer::loadFile(const QString &fileName)
 {
@@ -136,11 +163,18 @@ void ImageViewer::setImage(const QImage &newImage)
         foliageLabel->adjustSize();
     }
 
-    int hMargin = std::min(image.size().width() * 2 / 3, 128);
-    int vMargin = std::min(image.size().height() * 2 / 3, 128);
-    resize(image.size().width() + hMargin, image.size().height() + vMargin);
+    int hMargin = 256;//std::min(image.size().width() * 2 / 3, 256);
+    int vMargin = 128;//std::min(image.size().height() * 2 / 3, 256);
+    //resize(image.size().width() + hMargin, image.size().height() + vMargin);
     central->setGeometry(0, 0, image.size().width() + hMargin, image.size().height() + vMargin);
-    scrollArea->setGeometry(0, 0, image.size().width() + hMargin, image.size().height() + vMargin);
+
+    resize(image.size().width() + hMargin + vMargin, image.size().height() + hMargin);
+    scrollArea->setGeometry(0, 0, image.size().width() + hMargin * vMargin, image.size().height() + hMargin);
+    scrollArea->setAlignment(Qt::AlignCenter);
+    //heightLabel->move(imageTabs->rect().center() - heightLabel->rect().center());
+    foliageLabel->setAlignment(Qt::AlignCenter);
+    heightLabel->setAlignment(Qt::AlignCenter);
+    //foliageLabel->move(imageTabs->rect().center() - foliageLabel->rect().center());
 
     heightLabel->setImageData(image);
     foliageLabel->setImageData(foliage);
