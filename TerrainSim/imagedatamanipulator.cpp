@@ -476,9 +476,41 @@ void ImageDataManipulator::brushFoliageGrow(int x, int y, int r, float heightPer
             float dist = std::sqrt((float)(j * j + i * i));
             dist = saturate(1.0 - dist / kr);
 
+            // will change height per tree
+            float curDensity = fc.density;
+            float tgtDensity = saturate(curDensity + dist * heightPerTree);
+            if (tgtDensity <= 0.01f) {
+                fc.density = 0.f;
+                fc.count = 0.f;
+                fc.heightSum = 0.f;
+            } else if (tgtDensity > 0.999f) {
+                fc.density = 1.f;
+                fc.count = maxPlantsPerCell;
+                fc.heightSum = (float) maxPlantsPerCell;
+            } else {
+                int c = fc.count;
+                float dptMax = 1.f / (float) maxPlantsPerCell;
+                float dptMin = 0.1f / (float) maxPlantsPerCell;
+                if (c) {
+                    // determine if we need to add trees
+                    // need a better heuristic later...
+                    float dpt = tgtDensity / c;
+                    if (dpt > dptMax) {
+                        c = (int) std::ceil(tgtDensity / dptMax);
+                    } else if (dpt < dptMin) {
+                        c--; // out of time here
+                    }
+
+                } else {
+                    c = (int) std::ceil(tgtDensity / dptMax);
+                }
+                fc.density = tgtDensity;
+                fc.count = c;
+                fc.heightSum = maxPlantsPerCell * tgtDensity;
+            }
             // say a tree has a minimum height of 0.0, max height of 1.0
-            fc.heightSum += dist * heightPerTree * fc.count;
-            densityRecalculate(fc);
+            //fc.heightSum += dist * heightPerTree * fc.count;
+            //densityRecalculate(fc);
 
             foliageData[idx] = fc;
 
@@ -873,6 +905,17 @@ void ImageDataManipulator::ecosystemEvent(int x, int y)
     float viability = plant1.growth(tc.moisture * penaltyResources, temp, tc.sunlight * penaltyDensity);
     // grass has harder time growing under dense foliage
     float viabilityGrass = grass.growth(tc.moisture * penaltyResources, temp, tc.sunlight * penaltyDensity);
+
+    // fast acos approx
+    float z = normalData[idx].z;
+    z = 0.63661977f * ((-0.6981317007977f * z * z - 0.872664625997f) * z + 1.57079632679f);
+    //const float PI_2 = M_PI * 0.5f;
+    //float vbSlope = (PI_2 - z);
+    float vbSlope1 = remap(1.f - z, 0.60f, 0.8f, -1.f, 1.f);
+    float vbSlope2 = remap(1.f - z, 0.40f, 0.65f, -1.f, 1.f);
+
+    viability = std::min(viability, vbSlope1);
+    viabilityGrass = std::min(viabilityGrass, vbSlope2);
 
     // determine new number of plants
     int newPlants = (int) std::floor(std::max(0.0f, 2.5f * viability));

@@ -91,6 +91,10 @@ inline float clamp(float min, float max, float t) {
     return std::min(max, std::max(min, t));
 }
 
+inline float remap(float x, float mina, float maxa, float minb, float maxb) {
+    return clamp(minb, maxb, (x - mina) / (maxa - mina) * (maxb - minb) + minb);
+}
+
 typedef struct plantParams {
     plantParams(float agem,
                 float tmini, float tmaxi,

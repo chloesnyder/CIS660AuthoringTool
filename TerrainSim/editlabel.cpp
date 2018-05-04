@@ -38,7 +38,7 @@ void EditLabel::mouseEdit(float x, float y)
 
         } else if (mode == EditMode::foliage) {
             if(modShift) {
-                EditLabel::dataHandle.brushFoliageGrow(x, y, brushRadius, brushIntensity * 0.25f);
+                EditLabel::dataHandle.brushFoliageGrow(x, y, brushRadius, brushIntensity * (modAlt ? -0.05f : 0.05f));
             } else {
                 EditLabel::dataHandle.brushGrassGrow(x, y, brushRadius, brushIntensity * (modAlt ? -0.05f : 0.05f));
             }
